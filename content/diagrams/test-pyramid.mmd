@@ -1,0 +1,24 @@
+%% Description:
+%% Software Testing Pyramid distribution:
+%% - Base (70%): Fast, deterministic Unit Tests verifying decoupled domain business logic in < 3 seconds.
+%% - Middle (20%): Integration Tests validating real database transactions (Testcontainers), API routes, and schema contracts in < 1 minute.
+%% - Top (10%): End-to-End (E2E) Browser Smoke Tests verifying critical user journeys using Playwright in < 5 minutes.
+%% - Capstone: Targeted human exploratory verification and usability checks.
+
+flowchart TB
+    subgraph PYRAMID["Testing Pyramid Distribution"]
+        direction TB
+        E2E["End-to-End (E2E) Smoke Tests (~10%)<br/>Playwright / Headless Browser • Critical User Paths • Slower (3-5 min)"]
+        INT["Integration & Contract Tests (~20%)<br/>Testcontainers PostgreSQL • API Route Contracts • Medium (30-60s)"]
+        UNIT["Unit Tests (~70%)<br/>node:test / Vitest • Pure Domain Rules • Deterministic • Fast (< 3s)"]
+    end
+
+    E2E --- INT
+    INT --- UNIT
+
+    classDef unit fill:#dcfce7,stroke:#16a34a,stroke-width:2px;
+    classDef int fill:#dbeafe,stroke:#2563eb,stroke-width:2px;
+    classDef e2e fill:#fef3c7,stroke:#d97706,stroke-width:2px;
+    class UNIT unit;
+    class INT int;
+    class E2E e2e;

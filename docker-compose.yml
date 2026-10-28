@@ -1,0 +1,20 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: engineering-playbook
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - DATA_DIR=/app/data
+      - SESSION_SECRET=playbook-compose-session-secret-production
+    volumes:
+      - playbook-data:/app/data
+
+volumes:
+  playbook-data:
+    driver: local

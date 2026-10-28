@@ -1,0 +1,32 @@
+%% Description:
+%% Phase 0 Existing Project Intake Flow (Brownfield Onboarding):
+%% The 8 systematic audit steps executed when taking over legacy repositories:
+%% 1. p0-x1: Git history, active branches & stale PR audit
+%% 2. p0-x2: Dependency vulnerability scan (CVE audit)
+%% 3. p0-x3: Legacy architecture and runtime dependencies mapping
+%% 4. p0-x4: Clean checkout build and test execution verification
+%% 5. p0-x5: Secret sprawl and credential exposure scanning
+%% 6. p0-x6: Open source license compliance verification
+%% 7. p0-x7: Baseline test coverage and untracked critical paths audit
+%% 8. p0-x8: Prioritized technical debt backlog creation
+
+flowchart TD
+    START([Inherit Legacy Repository]) --> X1
+
+    subgraph PHASE0_INTAKE["Phase 0: Existing Repository Intake Protocol"]
+        X1["1. p0-x1: Git Audit<br/>Prune stale branches & map commit patterns"] --> X2
+        X2["2. p0-x2: Vulnerability Audit<br/>Scan manifests for critical CVEs"] --> X3
+        X3["3. p0-x3: Architecture Mapping<br/>Trace undocumented databases, crons & queues"] --> X4
+        X4["4. p0-x4: Clean Build Verification<br/>Verify build & tests pass from fresh clone"] --> X5
+        X5["5. p0-x5: Secret Sprawl Scan<br/>Scan commit history for API keys & rotate"] --> X6
+        X6["6. p0-x6: License Audit<br/>Verify dependency licenses against org policy"] --> X7
+        X7["7. p0-x7: Coverage Baseline<br/>Measure baseline coverage & flag blind spots"] --> X8
+        X8["8. p0-x8: Technical Debt Backlog<br/>Catalog legacy debt with effort & risk rankings"]
+    end
+
+    X8 --> READY([Repository Baseline Certified - Ready for Feature Work])
+
+    classDef intake fill:#eff6ff,stroke:#2563eb,stroke-width:1px;
+    classDef terminal fill:#d1fae5,stroke:#059669,stroke-width:2px;
+    class X1,X2,X3,X4,X5,X6,X7,X8 intake;
+    class START,READY terminal;

@@ -1,0 +1,296 @@
+[
+  {
+    "phase": 0,
+    "title": "Read-only intake of an existing repository",
+    "where": "Claude Code, Cursor, Codex, or Gemini CLI",
+    "text": "Goal: Perform a comprehensive read-only audit of the repository {{REPO_PATH}} for project {{PROJECT_NAME}}.\n\nFiles to read first:\n- README.md, package.json, pom.xml, go.mod, or Cargo.toml\n- .env.example, docker-compose.yml, Dockerfile\n- .github/workflows/ or CI configuration files\n\nConstraints:\n- Do not modify, create, or delete any source files or configuration files.\n- Do not commit or push any changes.\n- Do not print or extract any secrets, environment tokens, or sensitive credentials.\n\nContext:\n- One-line summary: {{ONE_LINE}}\n- Target users: {{USERS}}\n- Tech stack: {{STACK}}\n- Timeframe: {{TIMEFRAME}}\n\nRequired output:\nProduce a markdown report summarizing:\n1. Identified languages, package managers, and pinned runtime versions.\n2. Commands required to install dependencies, run the test suite, and start local development.\n3. Presence and coverage of existing automated tests.\n4. Obvious security or dependency warnings.\n\nAcceptance check:\nVerify that git status is completely clean before finishing.\n\nReport format:\nConclude your response by listing:\n- What files you inspected\n- What you verified\n- What you could not verify without executing untrusted scripts",
+    "stop_when": "The read-only audit report is generated and git status confirms zero modified files."
+  },
+  {
+    "phase": 0,
+    "title": "Map the repo and risks without changing it",
+    "where": "Claude Code, Cursor, Codex, or Gemini CLI",
+    "text": "Goal: Map the architectural component boundaries and operational risk factors in {{REPO_PATH}} for {{PROJECT_NAME}}.\n\nFiles to read first:\n- Top-level directory structure\n- Entrypoint files (e.g., src/index.ts, src/main.tsx, server.ts, cmd/main.go)\n- Configuration manifests and database migration directories\n\nConstraints:\n- Strictly read-only: do not edit, rename, or delete existing code.\n- Do not introduce new dependencies.\n- Keep risk analysis factual based solely on code evidence.\n\nContext:\n- Project: {{PROJECT_NAME}} ({{ONE_LINE}})\n- Primary stack: {{STACK}}\n\nRequired output:\nProvide a structured risk assessment detailing:\n1. Component Map: client surfaces, API services, database interactions, and third-party integrations.\n2. Technical Debt Hotspots: oversized files (>500 lines), circular dependencies, and unmaintained packages.\n3. Operational Risks: missing branch protection indicators, unpinned action hashes, or missing health check endpoints.\n4. Immediate stabilization recommendations ranked by priority.\n\nAcceptance check:\nRun git status to verify zero file modifications.\n\nReport format:\nState what you reviewed, what tests or scripts were observed, and what runtime behaviors remain unverified.",
+    "stop_when": "The architectural risk map is rendered with zero git modifications."
+  },
+  {
+    "phase": 0,
+    "title": "Bootstrap clean dev environment",
+    "where": "Claude Code, Cursor, Codex, or Gemini CLI",
+    "text": "Goal: Validate and document a deterministic local development setup for {{PROJECT_NAME}} in {{REPO_PATH}}.\n\nFiles to read first:\n- README.md\n- .env.example\n- package.json or build tool definitions\n- Dockerfile and docker-compose.yml (if present)\n\nConstraints:\n- Do not alter business domain logic.\n- Never write production credentials or private keys to .env files.\n- Pin all installed tools to the versions specified in {{STACK}}.\n\nContext:\n- Stack: {{STACK}}\n- Target delivery window: {{TIMEFRAME}}\n\nRequired output:\n1. Verify or create docs/DEVELOPMENT.md with step-by-step setup commands.\n2. Ensure single-command bootstrap starts the app on localhost.\n3. Verify test runner succeeds from a clean checkout.\n\nAcceptance check:\nRun the test command and verify zero failures. Run git diff to ensure only documentation and template examples were touched.\n\nReport format:\nReport what files were updated, what verification commands were executed, and what manual dependencies require developer intervention.",
+    "stop_when": "The development setup guide is documented and the local test suite passes cleanly."
+  },
+  {
+    "phase": 1,
+    "title": "Interview me before any build",
+    "where": "Claude Code, Cursor, or Gemini Chat",
+    "text": "Goal: Challenge assumptions and interview the engineering team regarding {{PROJECT_NAME}} before writing any code.\n\nFiles to read first:\n- docs/charter.md (if present)\n- README.md\n\nConstraints:\n- Do not generate code, scaffolding, or boilerplate.\n- Ask exactly one to three questions at a time; wait for responses before continuing.\n- Do not make flattering remarks; focus on critical failure modes.\n\nContext:\n- Purpose: {{ONE_LINE}}\n- Target users: {{USERS}}\n- Tech stack: {{STACK}}\n- Timeframe: {{TIMEFRAME}}\n\nRequired output:\nConduct a rigorous discovery interview covering:\n1. The specific friction event that forces {{USERS}} to seek an alternative.\n2. Current manual workarounds (spreadsheets, scripts) and their quantified cost.\n3. The single metric that defines success for {{TIMEFRAME}}.\n4. The primary technical bottleneck that could derail delivery.\n\nAcceptance check:\nSummarize the confirmed answers into a draft problem statement with all unresolved assumptions flagged.\n\nReport format:\nSummarize confirmed facts, remaining blind spots, and what has not been verified.",
+    "stop_when": "The user interview finishes and key user assumptions are cataloged."
+  },
+  {
+    "phase": 1,
+    "title": "Separate facts from assumptions",
+    "where": "Claude Code, Cursor, or Gemini CLI",
+    "text": "Goal: Audit the concept and value proposition for {{PROJECT_NAME}} by separating verified evidence from unproven assumptions.\n\nFiles to read first:\n- docs/research/ or docs/charter.md (if existing)\n- README.md\n\nConstraints:\n- Read-only analysis: do not modify application code.\n- Base facts only on user interview data, system logs, or documented analytics.\n- Treat all developer hypotheses as assumptions until proven.\n\nContext:\n- App summary: {{ONE_LINE}}\n- Audience: {{USERS}}\n- Target timeline: {{TIMEFRAME}}\n\nRequired output:\nProduce a two-column classification table in docs/research/assumptions.md:\n1. Verified Facts (with cited user quotes, metrics, or API proofs).\n2. Risky Assumptions (feasibility, willingness to adopt, workflow fit).\n3. De-risking Spikes: for each high-risk assumption, write the smallest experiment to test it in under 48 hours.\n\nAcceptance check:\nEnsure each de-risking experiment has a binary pass/fail criterion.\n\nReport format:\nReport files created or reviewed, tests performed, and unverified assumptions.",
+    "stop_when": "docs/research/assumptions.md is written with testable pass/fail criteria."
+  },
+  {
+    "phase": 2,
+    "title": "Harden the requirements",
+    "where": "Claude Code, Cursor, or Gemini CLI",
+    "text": "Goal: Transform ambiguous feature desires for {{PROJECT_NAME}} into unambiguous, testable user stories with Gherkin acceptance criteria.\n\nFiles to read first:\n- docs/PRD.md or docs/requirements/ (if present)\n- README.md\n\nConstraints:\n- Do not write implementation code.\n- Do not use vague terms like 'fast', 'intuitive', 'secure', or 'user-friendly'.\n- Every acceptance scenario must be verifiable by automated tests.\n\nContext:\n- Project: {{PROJECT_NAME}}\n- Summary: {{ONE_LINE}}\n- Target users: {{USERS}}\n- Stack: {{STACK}}\n\nRequired output:\nUpdate or generate docs/PRD.md containing:\n1. User persona profile for {{USERS}}.\n2. Functional user stories with strict Given-When-Then scenarios (happy path, validation error, edge case).\n3. Explicit Non-Functional Requirements (P95 latency under load, WCAG 2.2 AA accessibility, data retention).\n4. Explicit Non-Goals for the initial release.\n\nAcceptance check:\nConfirm every story has at least 3 concrete Gherkin scenarios with deterministic verification criteria.\n\nReport format:\nReport the requirements updated, the validation checklist used, and what stakeholder approvals remain unverified.",
+    "stop_when": "docs/PRD.md is written with Given-When-Then acceptance criteria for all MVP stories."
+  },
+  {
+    "phase": 2,
+    "title": "Define non-functional performance and accessibility limits",
+    "where": "Claude Code, Cursor, or Gemini CLI",
+    "text": "Goal: Establish quantifiable Non-Functional Requirements (NFR) budgets for {{PROJECT_NAME}} on {{STACK}}.\n\nFiles to read first:\n- docs/PRD.md\n- docs/ARCHITECTURE.md (if present)\n\nConstraints:\n- Do not modify existing application code.\n- Use industry standards: W3C WCAG 2.2 AA and Google Core Web Vitals.\n- All targets must have a numeric threshold and designated measurement tool.\n\nContext:\n- Project: {{PROJECT_NAME}}\n- Audience: {{USERS}}\n- Architecture: {{STACK}}\n\nRequired output:\nCreate docs/requirements/nfr.md with:\n1. Latency targets: P50 < 100ms, P95 < 300ms, P99 < 800ms for API endpoints.\n2. Frontend Web Vitals: LCP < 2.5s, CLS < 0.1, INP < 200ms.\n3. Accessibility: WCAG 2.2 AA contrast ratios (>= 4.5:1), keyboard operability, aria labels.\n4. Scalability & Availability: Target uptime (99.9%), maximum concurrent active users.\n\nAcceptance check:\nVerify every row contains: Metric, Numeric Target, Measurement Tool, and Alert Trigger.\n\nReport format:\nList documentation changed, tools identified, and unverified load conditions.",
+    "stop_when": "docs/requirements/nfr.md is committed with quantitative budgets for all four pillars."
+  },
+  {
+    "phase": 3,
+    "title": "Cut the scope to the core",
+    "where": "Claude Code, Cursor, or Gemini CLI",
+    "text": "Goal: Apply ruthless MoSCoW prioritization to lock the MVP scope for {{PROJECT_NAME}} before Gate G1.\n\nFiles to read first:\n- docs/PRD.md\n- docs/charter.md\n\nConstraints:\n- Do not add new feature ideas.\n- Must-Have list must fit within delivery window: {{TIMEFRAME}}.\n- Do not change existing code.\n\nContext:\n- Core value: {{ONE_LINE}}\n- Target users: {{USERS}}\n- Tech stack: {{STACK}}\n- Timeframe: {{TIMEFRAME}}\n\nRequired output:\nAuthor docs/PROJECT_PLAN.md with:\n1. Must-Have: The single critical path (max 3-5 user stories) required to validate {{ONE_LINE}}.\n2. Should-Have: High-value features deferred to post-MVP Milestone 2.\n3. Won't-Have: Explicit list of rejected features to protect scope.\n4. Milestone checkpoints mapping to {{TIMEFRAME}} with weekly demo goals.\n\nAcceptance check:\nVerify the Must-Have critical path takes less than 3 minutes for {{USERS}} to complete.\n\nReport format:\nReport what scope was cut, the milestone schedule produced, and what team capacity assumptions remain unverified.",
+    "stop_when": "docs/PROJECT_PLAN.md contains signed scope-lock boundary ready for Gate G1."
+  },
+  {
+    "phase": 3,
+    "title": "Milestone delivery slice definition",
+    "where": "Claude Code, Cursor, or Gemini CLI",
+    "text": "Goal: Break the Must-Have MVP scope for {{PROJECT_NAME}} into thin, vertical, testable slices.\n\nFiles to read first:\n- docs/PRD.md\n- docs/PROJECT_PLAN.md\n\nConstraints:\n- Slices must be end-to-end vertical (UI + API + DB), not horizontal technical layers.\n- Each slice must be deliverable in under 1 week within {{TIMEFRAME}}.\n\nContext:\n- Project: {{PROJECT_NAME}}\n- Stack: {{STACK}}\n- Timeframe: {{TIMEFRAME}}\n\nRequired output:\nDocument the milestone delivery slices in docs/milestones.md:\n1. Slice 1: Walking Skeleton (deployable pipeline, database connected, ping endpoint).\n2. Slice 2: Core Domain Action (happy path data creation and validation).\n3. Slice 3: Core Retrieval & Feedback (user view, error states, and responsive UI).\n4. Demonstration criteria and acceptance tests for each slice.\n\nAcceptance check:\nVerify every slice has an independent demo script and automated test validation.\n\nReport format:\nState documentation created, sequencing logic, and unverified velocity estimates.",
+    "stop_when": "docs/milestones.md defines thin vertical slices mapping to {{TIMEFRAME}}."
+  },
+  {
+    "phase": 4,
+    "title": "Skeptical architecture review",
+    "where": "Claude Code, Cursor, or Gemini CLI",
+    "text": "Goal: Review proposed system architecture for {{PROJECT_NAME}} skeptically, identifying single points of failure and premature complexity.\n\nFiles to read first:\n- docs/ARCHITECTURE.md or docs/PRD.md\n- docker-compose.yml or infra/ definitions (if present)\n\nConstraints:\n- Challenge unnecessary microservices, esoteric message queues, or premature caching.\n- Do not add third-party cloud services unless required by {{ONE_LINE}}.\n- Favor standard boring technology matching {{STACK}}.\n\nContext:\n- Project: {{PROJECT_NAME}}\n- Audience: {{USERS}}\n- Stack: {{STACK}}\n\nRequired output:\nProduce docs/architecture/review.md detailing:\n1. Architectural Critique: unnecessary hops, network boundaries, or distributed transactions.\n2. Single Points of Failure (SPOF) and catastrophic failure scenarios.\n3. Latency & Network Budget: estimated round-trip times across component boundaries.\n4. Recommended simplification plan preserving high reliability.\n\nAcceptance check:\nVerify that the simplified architecture can run locally with a single docker-compose or start command.\n\nReport format:\nReport components critiqued, simplifications proposed, and unverified throughput limits.",
+    "stop_when": "docs/architecture/review.md provides a defensible, simplified component topology."
+  },
+  {
+    "phase": 4,
+    "title": "Write an ADR for one decision",
+    "where": "Claude Code, Cursor, or Gemini CLI",
+    "text": "Goal: Author a formal Architecture Decision Record (ADR) for a key technical trade-off in {{PROJECT_NAME}}.\n\nFiles to read first:\n- docs/adr/ (inspect existing ADR numbering)\n- docs/ARCHITECTURE.md\n- package.json\n\nConstraints:\n- Follow the Michael Nygard ADR format (Context, Options, Decision, Consequences).\n- Evaluate at least 3 concrete alternatives; do not write a biased justification.\n- Do not commit secrets or provider credentials.\n\nContext:\n- Project: {{PROJECT_NAME}}\n- Tech stack: {{STACK}}\n\nRequired output:\nCreate docs/adr/NNNN-decision-title.md:\n1. Context: Problem statement and architectural constraints driving the decision.\n2. Options Considered: Pros and cons for three distinct architectural approaches.\n3. Decision: Chosen option and explicit justification.\n4. Consequences: Positive gains, accepted technical debt, and mitigation strategies.\n\nAcceptance check:\nVerify the ADR file uses the next sequential index and markdown headings match ADR convention.\n\nReport format:\nState the ADR filename created, alternatives weighed, and unverified vendor roadmaps.",
+    "stop_when": "The ADR is written and saved to docs/adr/ with status Accepted."
+  },
+  {
+    "phase": 5,
+    "title": "Schema review",
+    "where": "Claude Code, Cursor, or Gemini CLI",
+    "text": "Goal: Review database schema for {{PROJECT_NAME}} for referential integrity, indexing strategy, and migration safety.\n\nFiles to read first:\n- Schema files (e.g., prisma/schema.prisma, src/db/schema.ts, migrations/, init.sql)\n- docs/PRD.md\n\nConstraints:\n- All foreign keys must have corresponding indexes on child tables.\n- Primary keys must be typed consistently (UUIDv7 or BigInt).\n- Timestamps (created_at, updated_at) must be UTC.\n- Do not run destructive DROP queries.\n\nContext:\n- Stack: {{STACK}}\n- Purpose: {{ONE_LINE}}\n\nRequired output:\nProvide docs/db/schema-audit.md with:\n1. Entity relationship and normalization critique.\n2. Missing indexes for high-frequency filters, joins, and sorting.\n3. Nullability rules and foreign key ON DELETE policies (CASCADE vs RESTRICT).\n4. Zero-downtime migration review: flag any operations that lock tables in production.\n\nAcceptance check:\nVerify that all migration DDL scripts can execute UP and DOWN without data corruption.\n\nReport format:\nList schema files inspected, query bottlenecks identified, and unverified query plan benchmarks.",
+    "stop_when": "docs/db/schema-audit.md is authored with verified indexing and constraint safety."
+  },
+  {
+    "phase": 5,
+    "title": "Draft zero-downtime migration step",
+    "where": "Claude Code, Cursor, or Gemini CLI",
+    "text": "Goal: Write an expand-and-contract migration script for modifying a database table in {{PROJECT_NAME}} without application downtime.\n\nFiles to read first:\n- Current database schema definition\n- Latest database migration scripts\n\nConstraints:\n- Never drop or rename columns in the same release as the application code change.\n- Follow the 4-phase expand/backfill/switch/contract pattern.\n- Do not lock high-traffic tables with default value rewrites.\n\nContext:\n- Stack: {{STACK}}\n- Database: PostgreSQL / relational database\n\nRequired output:\nCreate migration scripts in the repository migration directory:\n1. Phase 1 (Expand): Add nullable new column or dual-write trigger.\n2. Phase 2 (Backfill): Batched background script backfilling existing rows without table locks.\n3. Rollback script reversing the step cleanly.\n\nAcceptance check:\nExecute the migration runner in test environment; assert both UP and DOWN migrations succeed.\n\nReport format:\nReport migration files created, execution status in local database, and unverified production table sizes.",
+    "stop_when": "Expand-and-contract migration script and rollback file pass test database run."
+  },
+  {
+    "phase": 6,
+    "title": "Contract first",
+    "where": "Claude Code, Cursor, or Gemini CLI",
+    "text": "Goal: Draft an OpenAPI 3.1 specification for {{PROJECT_NAME}} before implementing backend routes.\n\nFiles to read first:\n- docs/PRD.md\n- Existing route handlers (if any in {{REPO_PATH}})\n\nConstraints:\n- Adhere to RESTful conventions: plural nouns, HTTP verbs, standard status codes.\n- Define error payloads using RFC 9457 Problem Details (application/problem+json).\n- Do not invent custom non-standard error structures.\n\nContext:\n- Project: {{PROJECT_NAME}} ({{ONE_LINE}})\n- Audience: {{USERS}}\n- Tech stack: {{STACK}}\n\nRequired output:\nCreate or update docs/api/openapi.yaml containing:\n1. Complete endpoint definitions for all MVP user stories.\n2. Request bodies with field-level type and validation constraints.\n3. Standard 2xx, 400, 401, 403, 404, 429, and 500 responses.\n4. RFC 9457 Problem Details schema component.\n\nAcceptance check:\nRun OpenAPI linter (e.g., npx @stoplight/spectral-cli lint docs/api/openapi.yaml) with zero errors.\n\nReport format:\nReport schema files modified, linter output, and unverified client SDK generation.",
+    "stop_when": "docs/api/openapi.yaml passes Spectral linter with zero errors."
+  },
+  {
+    "phase": 6,
+    "title": "RFC 9457 error handler implementation",
+    "where": "Claude Code, Cursor, or Gemini CLI",
+    "text": "Goal: Implement an RFC 9457 Problem Details error handler middleware for {{PROJECT_NAME}} in {{STACK}}.\n\nFiles to read first:\n- docs/api/openapi.yaml\n- Server entrypoint and route middleware setup\n\nConstraints:\n- Response Content-Type must be 'application/problem+json'.\n- Must include: type, title, status, detail, instance.\n- Never leak internal database stack traces, SQL syntax errors, or server secrets to client responses in production.\n\nContext:\n- Stack: {{STACK}}\n- Repository: {{REPO_PATH}}\n\nRequired output:\n1. TypeScript error classes mapping domain errors to HTTP status codes.\n2. Centralized error handling middleware formatting all thrown errors into RFC 9457.\n3. Unit tests asserting RFC 9457 payload format for 400 Bad Request, 404 Not Found, and 500 Internal Error.\n\nAcceptance check:\nRun test suite verifying error responses contain exact RFC 9457 fields and sanitized 500 error IDs.\n\nReport format:\nReport middleware files created, tests executed, and unverified edge proxies.",
+    "stop_when": "Error handling middleware and unit tests verifying RFC 9457 compliance pass."
+  },
+  {
+    "phase": 7,
+    "title": "Build one slice, test first",
+    "where": "Claude Code, Cursor, or Gemini CLI",
+    "text": "Goal: Build a single interactive user interface slice for {{PROJECT_NAME}} following test-first principles.\n\nFiles to read first:\n- docs/PRD.md (relevant user story)\n- src/components/ or design tokens\n- Existing UI tests\n\nConstraints:\n- Write component tests before or alongside UI code.\n- Use semantic HTML (<main>, <nav>, <button>, <label>); no clickable div wrappers.\n- Support responsive viewport down to 390px with zero horizontal scroll.\n- Do not change unrelated components.\n\nContext:\n- Project: {{PROJECT_NAME}}\n- Audience: {{USERS}}\n- Stack: {{STACK}}\n\nRequired output:\n1. Component test asserting user interaction, state transition, and keyboard navigation.\n2. Accessible React/TypeScript component implementing the slice.\n3. Loading and error states.\n\nAcceptance check:\nRun component test suite (npm test or vitest); assert 100% passing tests with visible focus rings.\n\nReport format:\nState components created, tests passing, and unverified visual styling at other viewports.",
+    "stop_when": "Component tests pass and component renders cleanly without horizontal scroll."
+  },
+  {
+    "phase": 7,
+    "title": "Accessibility audit of one page",
+    "where": "Claude Code, Cursor, or Gemini CLI",
+    "text": "Goal: Conduct an accessibility audit of a key page in {{PROJECT_NAME}} against W3C WCAG 2.2 Level AA.\n\nFiles to read first:\n- Page component and layout files\n- Global stylesheet and theme tokens\n\nConstraints:\n- Compliance standard: WCAG 2.2 AA.\n- Contrast ratio must be >= 4.5:1 for normal text, >= 3:1 for large text.\n- Every interactive element must have a visible focus outline and accessible name.\n\nContext:\n- Project: {{PROJECT_NAME}}\n- Stack: {{STACK}}\n\nRequired output:\n1. Audit checklist of the target page covering landmark roles, keyboard navigation, and form labels.\n2. Fixes for missing htmlFor/id label bindings, missing aria-expanded attributes, and low contrast.\n3. Automated accessibility test using axe-core or Playwright.\n\nAcceptance check:\nRun automated axe accessibility check; assert zero critical or serious accessibility violations.\n\nReport format:\nReport accessibility bugs resolved, tests run, and unverified screen reader combinations.",
+    "stop_when": "Automated axe-core accessibility checks pass with zero violations."
+  },
+  {
+    "phase": 8,
+    "title": "Implement one business rule",
+    "where": "Claude Code, Cursor, or Gemini CLI",
+    "text": "Goal: Implement a core domain business rule in {{PROJECT_NAME}} with tests first and boundary validation.\n\nFiles to read first:\n- docs/PRD.md (business requirements)\n- Domain service files in {{REPO_PATH}}\n\nConstraints:\n- Decouple pure domain business logic from HTTP frameworks and database clients.\n- Validate all inputs strictly at the perimeter before executing domain rules.\n- Do not alter unrelated business services.\n\nContext:\n- Project: {{PROJECT_NAME}}\n- Core purpose: {{ONE_LINE}}\n- Stack: {{STACK}}\n\nRequired output:\n1. Pure unit tests asserting calculation math, state transitions, and edge cases.\n2. Domain service module implementing the business rule.\n3. Input validation schema enforcing boundary invariants.\n\nAcceptance check:\nRun unit tests; assert 100% pass rate in under 1 second with boundary edge cases covered.\n\nReport format:\nReport domain modules created, test assertions verified, and unverified database integrations.",
+    "stop_when": "Domain service and unit tests pass with all edge cases verified."
+  },
+  {
+    "phase": 8,
+    "title": "Perimeter validation and transaction wrapper",
+    "where": "Claude Code, Cursor, or Gemini CLI",
+    "text": "Goal: Implement request validation and database transaction safety for a mutating endpoint in {{PROJECT_NAME}}.\n\nFiles to read first:\n- docs/api/openapi.yaml\n- Controller and database repository files\n\nConstraints:\n- Never trust client inputs; validate body, query params, and headers.\n- Wrap multi-table operations in ACID transaction blocks with automatic rollback.\n- No raw unsanitized SQL queries.\n\nContext:\n- Stack: {{STACK}}\n- Project: {{PROJECT_NAME}}\n\nRequired output:\n1. Validation schema (Zod/TypeBox/Joi) matching the OpenAPI contract.\n2. Route controller with validation middleware.\n3. Transaction wrapper ensuring atomicity during multi-table writes.\n4. Integration test asserting rollback on failure.\n\nAcceptance check:\nRun integration test asserting that simulated mid-transaction failure leaves zero orphan records.\n\nReport format:\nList controllers updated, transaction tests executed, and unverified connection pool limits.",
+    "stop_when": "Transaction rollback integration tests pass cleanly."
+  },
+  {
+    "phase": 9,
+    "title": "STRIDE threat model",
+    "where": "Claude Code, Cursor, or Gemini CLI",
+    "text": "Goal: Conduct a STRIDE threat model analysis for the core architecture of {{PROJECT_NAME}}.\n\nFiles to read first:\n- docs/ARCHITECTURE.md\n- docs/api/openapi.yaml\n- Authentication and authorization middleware\n\nConstraints:\n- Base threats on actual architecture in {{STACK}}, not generic boilerplate.\n- Do not store or print real security tokens or secrets.\n\nContext:\n- Project: {{PROJECT_NAME}}\n- Audience: {{USERS}}\n- Architecture: {{STACK}}\n\nRequired output:\nCreate docs/security/stride-threat-model.md analyzing:\n1. Spoofing: Authentication bypass and token replay vectors.\n2. Tampering: Parameter tampering, SQL injection, and XSS risks.\n3. Repudiation: Audit log completeness for sensitive operations.\n4. Information Disclosure: PII leakage, stack trace leaks, and insecure headers.\n5. Denial of Service: Unbounded payload limits, slow queries, and missing rate limits.\n6. Elevation of Privilege: BOLA/IDOR and role escalation paths.\nFor every threat, provide concrete code-level mitigations.\n\nAcceptance check:\nVerify every identified threat has an assigned mitigation owner and testable check.\n\nReport format:\nReport threats cataloged, mitigations reviewed, and unverified third-party dependencies.",
+    "stop_when": "docs/security/stride-threat-model.md is documented with mitigations for each STRIDE category."
+  },
+  {
+    "phase": 9,
+    "title": "Attacker-minded diff review",
+    "where": "Claude Code, Cursor, or Gemini CLI",
+    "text": "Goal: Review recent code changes in {{REPO_PATH}} from the perspective of an attacker targeting OWASP ASVS and API Top 10.\n\nFiles to read first:\n- git diff against main branch (or target PR diff)\n- docs/security/ or auth middleware\n\nConstraints:\n- Review diff skeptically looking for security flaws.\n- Inspect for IDOR (can User A access User B's resource?), SSRF, SQLi, and secret leaks.\n- Do not modify code during review.\n\nContext:\n- Project: {{PROJECT_NAME}}\n- Stack: {{STACK}}\n\nRequired output:\nProduce a security review comment detailing:\n1. Authentication & Authorization audit of new endpoints.\n2. Input sanitization and boundary checks.\n3. Security header compliance (CSP, CORS, HSTS).\n4. Secret scan: verify no tokens or keys are present in diff.\n\nAcceptance check:\nRun automated secret scanner (e.g. gitleaks or trufflehog) on the diff; verify zero findings.\n\nReport format:\nReport diff commits inspected, security findings ranked by CVSS, and unverified network configurations.",
+    "stop_when": "Security audit report is produced and secret scanner passes with zero findings."
+  },
+  {
+    "phase": 10,
+    "title": "Behaviour tests from acceptance criteria",
+    "where": "Claude Code, Cursor, or Gemini CLI",
+    "text": "Goal: Translate Given-When-Then acceptance criteria from docs/PRD.md into automated behavior tests for {{PROJECT_NAME}}.\n\nFiles to read first:\n- docs/PRD.md\n- Existing test files in tests/ or src/\n\nConstraints:\n- Test behavior and observable outcomes, not private internal methods.\n- Tests must be deterministic and run in under 3 seconds.\n- Do not mock the system under test; mock only external third parties.\n\nContext:\n- Project: {{PROJECT_NAME}}\n- Stack: {{STACK}}\n\nRequired output:\n1. Test specification file directly reflecting PRD Gherkin scenarios.\n2. Happy path assertions.\n3. Negative edge case assertions (invalid formats, missing auth, boundary values).\n\nAcceptance check:\nRun the test runner command; assert all newly created behavior tests pass with zero failures.\n\nReport format:\nReport test files created, scenarios covered, and unverified asynchronous timings.",
+    "stop_when": "All behavior tests matching PRD acceptance criteria pass cleanly."
+  },
+  {
+    "phase": 10,
+    "title": "Automate integration test container",
+    "where": "Claude Code, Cursor, or Gemini CLI",
+    "text": "Goal: Configure isolated integration tests using Testcontainers or Docker Compose for {{PROJECT_NAME}}.\n\nFiles to read first:\n- docker-compose.yml\n- Database connection and migration scripts\n- Existing integration tests\n\nConstraints:\n- Tests must run against a real database instance (e.g., PostgreSQL), not SQLite mocks.\n- Each test suite must start with fresh tables or isolated transactions.\n- Do not connect to remote production databases.\n\nContext:\n- Stack: {{STACK}}\n- Repository: {{REPO_PATH}}\n\nRequired output:\n1. Integration test runner launching a containerized test database.\n2. Automated schema migration execution before tests run.\n3. CRUD integration test verifying actual database transactions.\n4. Clean container teardown after tests complete.\n\nAcceptance check:\nRun integration test command; assert container boots, migrations run, tests pass, and container terminates.\n\nReport format:\nReport test scripts created, execution duration, and unverified cloud networking.",
+    "stop_when": "Containerized integration tests execute migrations and pass cleanly."
+  },
+  {
+    "phase": 11,
+    "title": "Skeptical diff review",
+    "where": "Claude Code, Cursor, or Gemini CLI",
+    "text": "Goal: Review a pull request diff in {{REPO_PATH}} with a skeptical staff-engineer mindset.\n\nFiles to read first:\n- git diff against main\n- .github/pull_request_template.md (if present)\n\nConstraints:\n- Enforce Conventional Commits specification.\n- Reject PRs over 400 lines of code without architectural justification.\n- Check for unhandled promises, memory leaks, and N+1 query patterns.\n\nContext:\n- Project: {{PROJECT_NAME}}\n- Stack: {{STACK}}\n\nRequired output:\nProduce a structured PR review:\n1. Summary of changes and intent.\n2. Correctness & Architecture: Logic bugs, concurrency risks, and invariant violations.\n3. Testing Depth: Are edge cases and failure paths tested?\n4. Performance & Resource Safety: Query complexity and unneeded re-renders.\n5. Specific inline diff recommendations for any flagged issue.\n\nAcceptance check:\nVerify that all suggested improvements include concrete code snippet replacements.\n\nReport format:\nState commits reviewed, issues categorized by severity (High/Med/Low), and unverified runtime telemetry.",
+    "stop_when": "Diff review is generated with actionable line-by-line feedback."
+  },
+  {
+    "phase": 11,
+    "title": "PR size and complexity audit",
+    "where": "Claude Code, Cursor, or Gemini CLI",
+    "text": "Goal: Audit open pull requests and branches in {{REPO_PATH}} for size, cyclomatic complexity, and test ratio.\n\nFiles to read first:\n- git log, git status, and PR diff\n- Code quality configuration (.eslintrc, biome.json, or tsconfig.json)\n\nConstraints:\n- Do not modify application code.\n- Provide concrete recommendations to break oversized branches into smaller atomic PRs.\n\nContext:\n- Project: {{PROJECT_NAME}}\n- Delivery timeframe: {{TIMEFRAME}}\n\nRequired output:\nProvide a branch audit report in docs/reviews/pr-audit.md:\n1. Total line additions and deletions.\n2. Test-to-code ratio (aim for >= 1:1 on new domain logic).\n3. Step-by-step cherry-pick or decomposition plan if PR exceeds 400 lines.\n\nAcceptance check:\nVerify the decomposition plan allows each sub-PR to build and pass tests independently.\n\nReport format:\nReport branches evaluated, proposed PR splits, and unverified merge conflict states.",
+    "stop_when": "docs/reviews/pr-audit.md outlines atomic PR breakdown passing independent tests."
+  },
+  {
+    "phase": 12,
+    "title": "Find the bottleneck",
+    "where": "Claude Code, Cursor, or Gemini CLI",
+    "text": "Goal: Measure and isolate the primary performance bottleneck in {{PROJECT_NAME}} before Gate G3.\n\nFiles to read first:\n- High-traffic API route handlers and database queries\n- Frontend client bundles and entrypoints\n- docs/requirements/nfr.md\n\nConstraints:\n- Measure first: never apply speculative optimizations without baseline profiling data.\n- Test under realistic data volume, not empty tables.\n- Do not change functional behavior.\n\nContext:\n- Project: {{PROJECT_NAME}}\n- Stack: {{STACK}}\n- Target P95 latency: < 300ms\n\nRequired output:\nGenerate docs/performance/bottleneck-audit.md detailing:\n1. Measured baseline latency or bundle metrics (P50, P95, P99).\n2. Root cause analysis: CPU bound, memory bound, N+1 query, or bundle weight.\n3. Surgical optimization patch.\n4. Post-optimization benchmark proving measurable gain.\n\nAcceptance check:\nRun benchmark command verifying that P95 latency or bundle weight improved by at least 20%.\n\nReport format:\nReport benchmarks run, optimizations applied, and unverified production CDN conditions.",
+    "stop_when": "docs/performance/bottleneck-audit.md demonstrates measured improvement against baseline."
+  },
+  {
+    "phase": 12,
+    "title": "Frontend Web Vitals and bundle audit",
+    "where": "Claude Code, Cursor, or Gemini CLI",
+    "text": "Goal: Audit and optimize client bundle footprint and Core Web Vitals for {{PROJECT_NAME}}.\n\nFiles to read first:\n- Bundler configuration (vite.config.ts, next.config.js)\n- Main client entrypoints and routing tables\n- package.json dependencies\n\nConstraints:\n- Keep initial gzipped JavaScript bundle under 150KB.\n- Meet Core Web Vitals: LCP < 2.5s, CLS < 0.1, INP < 200ms.\n- Do not sacrifice accessibility for bundle size.\n\nContext:\n- Project: {{PROJECT_NAME}}\n- Stack: {{STACK}}\n\nRequired output:\n1. Bundle visualizer report analyzing heaviest dependency chunks.\n2. Implementation of dynamic route splitting and lazy loading for heavy modals.\n3. Core Web Vitals verification report.\n\nAcceptance check:\nRun build command (e.g. npm run build); inspect dist/ chunk sizes and assert main chunk is within budget.\n\nReport format:\nReport chunks analyzed, code-splitting applied, and unverified low-end mobile hardware.",
+    "stop_when": "Production build succeeds with all bundle chunks within defined size budgets."
+  },
+  {
+    "phase": 13,
+    "title": "Pipeline review",
+    "where": "Claude Code, Cursor, or Gemini CLI",
+    "text": "Goal: Audit CI/CD workflows for {{PROJECT_NAME}} against security best practices and speed benchmarks.\n\nFiles to read first:\n- .github/workflows/*.yml or CI definitions\n- Dockerfile\n- package.json scripts\n\nConstraints:\n- Enforce least-privilege permissions (e.g. permissions: contents: read).\n- Pin all GitHub Actions to full commit SHAs, not mutable tags.\n- Cache dependency layers to keep total pipeline time under 5 minutes.\n- Never echo secrets or tokens into CI logs.\n\nContext:\n- Project: {{PROJECT_NAME}}\n- Stack: {{STACK}}\n\nRequired output:\nUpdated CI workflow file with:\n1. Parallelized lint, unit test, and security scan jobs.\n2. Dependency caching keys.\n3. Container build with non-root security context.\n4. OIDC integration replacing static long-lived credentials.\n\nAcceptance check:\nValidate workflow syntax using actionlint or schema validator; assert zero syntax or security warnings.\n\nReport format:\nReport workflow files updated, security hardenings applied, and unverified cloud deployment runners.",
+    "stop_when": "CI workflow passes actionlint with pinned actions and least-privilege tokens."
+  },
+  {
+    "phase": 13,
+    "title": "Ephemeral PR environment configuration",
+    "where": "Claude Code, Cursor, or Gemini CLI",
+    "text": "Goal: Configure automated preview environments for every pull request in {{PROJECT_NAME}}.\n\nFiles to read first:\n- .github/workflows/\n- Dockerfile and deployment scripts\n\nConstraints:\n- Previews must be ephemeral: spin up on PR open and tear down on PR close/merge.\n- Preview URLs must be isolated from production databases.\n- Do not leak staging or prod secrets.\n\nContext:\n- Project: {{PROJECT_NAME}}\n- Stack: {{STACK}}\n\nRequired output:\n1. CI workflow job building preview container on PR events.\n2. Deployment step outputting unique preview URL to pull request comments.\n3. Teardown workflow triggered on pull request closure.\n\nAcceptance check:\nValidate workflow logic; verify preview URL generation and cleanup event triggers.\n\nReport format:\nReport workflow files created, cleanup mechanisms configured, and unverified DNS wildcards.",
+    "stop_when": "PR preview and cleanup workflows are defined and validated."
+  },
+  {
+    "phase": 14,
+    "title": "Release plan",
+    "where": "Claude Code, Cursor, or Gemini CLI",
+    "text": "Goal: Author an operational release and rollback plan for {{PROJECT_NAME}} prior to Gate G4.\n\nFiles to read first:\n- docs/ARCHITECTURE.md\n- docs/PROJECT_PLAN.md\n- Infrastructure and deployment configurations\n\nConstraints:\n- Plan must include concrete rollback triggers and automated health checks.\n- Zero-downtime: migrations and deployments must support rolling updates.\n- Do not write secrets or tokens into the runbook.\n\nContext:\n- Project: {{PROJECT_NAME}}\n- Stack: {{STACK}}\n- Release window: {{TIMEFRAME}}\n\nRequired output:\nCreate docs/releases/release-plan.md detailing:\n1. Pre-flight verification checklist.\n2. Expand/backfill/switch/contract migration sequence.\n3. Canary or rolling deployment progression (10% -> 50% -> 100%).\n4. Explicit rollback criteria (e.g. 5xx rate > 1% over 2 minutes) and exact rollback CLI command.\n5. Post-deployment smoke test suite.\n\nAcceptance check:\nVerify every deployment step has an explicit verification command and rollback counterpart.\n\nReport format:\nReport runbooks created, verification commands listed, and unverified DNS propagation latency.",
+    "stop_when": "docs/releases/release-plan.md contains verified deployment and rollback commands for Gate G4."
+  },
+  {
+    "phase": 14,
+    "title": "Health check probes and rollback dry-run",
+    "where": "Claude Code, Cursor, or Gemini CLI",
+    "text": "Goal: Implement HTTP liveness (/healthz) and readiness (/readyz) probes and simulate a deployment rollback in {{PROJECT_NAME}}.\n\nFiles to read first:\n- Server routing and initialization files\n- Database connection pool configuration\n\nConstraints:\n- /healthz must check process liveness with minimal overhead (< 5ms).\n- /readyz must verify database connection pool and cache readiness.\n- Probes must never leak credentials or internal stack details.\n\nContext:\n- Stack: {{STACK}}\n- Project: {{PROJECT_NAME}}\n\nRequired output:\n1. /healthz endpoint returning HTTP 200 when service is running.\n2. /readyz endpoint returning 200 when database ping succeeds and 503 during warm-up.\n3. Integration test asserting both probe responses.\n\nAcceptance check:\nRun test suite verifying /readyz returns 503 when database is disconnected and 200 when ready.\n\nReport format:\nReport probe controllers created, tests executed, and unverified load balancer health intervals.",
+    "stop_when": "Health and readiness probe tests pass with proper status code handling."
+  },
+  {
+    "phase": 15,
+    "title": "Alert audit",
+    "where": "Claude Code, Cursor, or Gemini CLI",
+    "text": "Goal: Audit monitoring alerts for {{PROJECT_NAME}} to eliminate alert fatigue and ensure high signal-to-noise.\n\nFiles to read first:\n- Monitoring and alerting rules (e.g., prometheus.yml, terraform/alerts, datadog/)\n- docs/requirements/nfr.md\n\nConstraints:\n- Alert on symptoms affecting {{USERS}} (high error rate, elevated latency), not background noise (CPU blips).\n- Every alert must have an assigned severity (SEV-1 vs SEV-2) and link to an actionable runbook.\n- If an alert requires no human action, delete or silence it.\n\nContext:\n- Project: {{PROJECT_NAME}}\n- Audience: {{USERS}}\n- Tech stack: {{STACK}}\n\nRequired output:\nGenerate docs/monitoring/alert-audit.md with:\n1. SLO definitions: Availability (99.9%) and Latency (P95 < 300ms).\n2. Critical Alert Rules: Four Golden Signals (Latency, Traffic, Errors, Saturation).\n3. Alert catalog mapping every alert to its root runbook documentation.\n4. Notification routing schedule (PagerDuty/Slack/Email).\n\nAcceptance check:\nVerify every alert rule specifies: Threshold, Duration, Severity, and Runbook URL.\n\nReport format:\nList alert configurations audited, noisy rules eliminated, and unverified paging integrations.",
+    "stop_when": "docs/monitoring/alert-audit.md maps every critical alert to an actionable runbook."
+  },
+  {
+    "phase": 15,
+    "title": "Instrument Golden Signals telemetry",
+    "where": "Claude Code, Cursor, or Gemini CLI",
+    "text": "Goal: Instrument OpenTelemetry or Prometheus metrics for the Four Golden Signals in {{PROJECT_NAME}}.\n\nFiles to read first:\n- Server entrypoint and HTTP routing middleware\n- Database connection wrapper\n\nConstraints:\n- Do not log sensitive user data or authorization headers in trace spans.\n- Metric collection overhead must consume < 2% CPU.\n- Use standard metric names following OpenTelemetry semantic conventions.\n\nContext:\n- Stack: {{STACK}}\n- Project: {{PROJECT_NAME}}\n\nRequired output:\n1. Telemetry middleware recording HTTP request duration, route, method, and status code.\n2. Database query duration histogram.\n3. /metrics endpoint (or OTLP exporter) publishing telemetry.\n4. Unit test asserting metric increments on simulated requests.\n\nAcceptance check:\nRun test suite asserting telemetry middleware records request duration and status without throwing.\n\nReport format:\nReport telemetry files added, metrics verified, and unverified remote collector endpoints.",
+    "stop_when": "Telemetry middleware and metric unit tests pass successfully."
+  },
+  {
+    "phase": 16,
+    "title": "Monthly health report",
+    "where": "Claude Code, Cursor, or Gemini CLI",
+    "text": "Goal: Produce a monthly repository health, dependency security, and cloud cost audit report for {{PROJECT_NAME}}.\n\nFiles to read first:\n- package.json or dependency lockfiles\n- .github/workflows/ or dependency update configs\n- docs/PROJECT_STATUS.md\n\nConstraints:\n- Read-only analysis: do not upgrade packages in this turn.\n- Classify dependencies by risk and license compliance.\n- Flag end-of-life runtimes.\n\nContext:\n- Project: {{PROJECT_NAME}}\n- Tech stack: {{STACK}}\n- Timeframe: {{TIMEFRAME}}\n\nRequired output:\nGenerate docs/maintenance/monthly-health-report.md covering:\n1. Dependency Audit: Outdated packages, major version upgrades pending, and CVE vulnerability counts.\n2. Technical Debt Backlog: Top 3 candidate refactors ranked by stability impact.\n3. FinOps & Cost: Overprovisioned resources, stale storage snapshots, and unused instances.\n4. Prioritized maintenance sprint task list.\n\nAcceptance check:\nConfirm every security vulnerability cites its CVE identifier and available patch version.\n\nReport format:\nReport dependencies analyzed, vulnerabilities documented, and unverified cloud billing consoles.",
+    "stop_when": "docs/maintenance/monthly-health-report.md is authored with categorized health metrics."
+  },
+  {
+    "phase": 16,
+    "title": "Disaster recovery drill runbook",
+    "where": "Claude Code, Cursor, or Gemini CLI",
+    "text": "Goal: Author an executable Disaster Recovery (DR) restoration runbook for {{PROJECT_NAME}} on {{STACK}}.\n\nFiles to read first:\n- Database backup configurations and scripts\n- docs/ARCHITECTURE.md\n\nConstraints:\n- Define concrete Recovery Time Objective (RTO < 60 min) and Recovery Point Objective (RPO < 1 hour).\n- Step-by-step restoration commands must be executable by any on-call engineer.\n- Do not include raw passwords or root credentials.\n\nContext:\n- Project: {{PROJECT_NAME}}\n- Audience: {{USERS}}\n- Stack: {{STACK}}\n\nRequired output:\nAuthor docs/runbooks/disaster-recovery.md detailing:\n1. Backup verification commands for snapshot integrity.\n2. Point-in-time recovery (PITR) restoration steps to an isolated staging database.\n3. Data integrity validation queries to run before reconnecting traffic.\n4. Communication templates for stakeholder incident updates.\n\nAcceptance check:\nVerify all CLI restoration commands are documented with expected stdout outputs.\n\nReport format:\nReport runbooks created, command syntaxes verified, and unverified cloud snapshot drill runs.",
+    "stop_when": "docs/runbooks/disaster-recovery.md is written with complete CLI restoration commands."
+  },
+  {
+    "phase": 17,
+    "title": "Handover pack",
+    "where": "Claude Code, Cursor, or Gemini CLI",
+    "text": "Goal: Compile the final comprehensive engineering handover dossier for {{PROJECT_NAME}} in {{REPO_PATH}}.\n\nFiles to read first:\n- docs/PRD.md, docs/ARCHITECTURE.md, docs/PROJECT_STATUS.md\n- README.md\n- docs/runbooks/\n\nConstraints:\n- Never store passwords, private keys, or API tokens in handover documents; reference password managers or cloud IAM.\n- Ensure all links and file paths are valid relative repository references.\n\nContext:\n- Project: {{PROJECT_NAME}}\n- One-line summary: {{ONE_LINE}}\n- Target users: {{USERS}}\n- Tech stack: {{STACK}}\n- Timeframe completed: {{TIMEFRAME}}\n\nRequired output:\nCreate docs/handover/README.md containing:\n1. Executive Summary & Architecture Overview.\n2. System Access & Credential Inventory (secret vault paths only).\n3. Routine Operations Manual: deployment, backup restore, and common debug workflows.\n4. Top 5 Known Gotchas & Workarounds.\n5. Formal Ownership Acceptance Sign-off Matrix.\n\nAcceptance check:\nVerify every referenced file path exists in the repository.\n\nReport format:\nReport handover sections completed, access pathways cataloged, and unverified receiving team permissions.",
+    "stop_when": "docs/handover/README.md is authored and verified with zero raw secrets."
+  },
+  {
+    "phase": 17,
+    "title": "Reverse-shadowing schedule and ops manual",
+    "where": "Claude Code, Cursor, or Gemini CLI",
+    "text": "Goal: Author a 5-day reverse-shadowing curriculum and operational runbook for transitioning {{PROJECT_NAME}} to the receiving team.\n\nFiles to read first:\n- docs/handover/README.md\n- docs/ARCHITECTURE.md\n- CI/CD workflow files\n\nConstraints:\n- Transition must ensure receiving engineers perform operations unassisted.\n- Maintain production stability with zero deployment disruptions during transfer.\n\nContext:\n- Project: {{PROJECT_NAME}}\n- Tech stack: {{STACK}}\n- Audience: {{USERS}}\n\nRequired output:\nAuthor docs/handover/reverse-shadowing.md with:\n1. Day 1: Architecture walkthrough and local environment bootstrap.\n2. Day 2: Codebase tour, domain models, and key user flows.\n3. Day 3: Execution of a routine staging deployment and smoke verification.\n4. Day 4: Simulated failure injection and incident response drill.\n5. Day 5: Administrative account ownership transfer and formal sign-off.\n\nAcceptance check:\nVerify every day includes concrete demonstration requirements and verification checkboxes.\n\nReport format:\nReport transition schedule created, verification checkpoints defined, and unverified calendar dates.",
+    "stop_when": "docs/handover/reverse-shadowing.md contains a 5-day curriculum with verification criteria."
+  },
+  {
+    "phase": 2,
+    "title": "Edge case and error state matrix",
+    "where": "Claude Code, Cursor, or Gemini CLI",
+    "text": "Goal: Define explicit system behavior for edge cases and zero-data states in {{PROJECT_NAME}}.\n\nFiles to read first:\n- docs/PRD.md\n- docs/requirements/ (if present)\n\nConstraints:\n- Do not write implementation code.\n- Address network timeouts, zero-data empty states, max pagination limits, and concurrent edit collisions.\n\nContext:\n- Project: {{PROJECT_NAME}}\n- Audience: {{USERS}}\n- Tech stack: {{STACK}}\n\nRequired output:\nCreate docs/requirements/edge-cases.md with an edge-case matrix specifying:\n1. Failure Scenario: description of unexpected input or network disruption.\n2. User Feedback: exact copy or visual indicator shown to {{USERS}}.\n3. System Recovery: retry mechanism, transaction rollback, or fallback caching.\n4. Automated Test Proof: designated unit or integration test verifying the recovery.\n\nAcceptance check:\nVerify every edge case scenario has a designated automated test assertion.\n\nReport format:\nState edge cases cataloged, recovery behaviors defined, and unverified third-party failure modes.",
+    "stop_when": "docs/requirements/edge-cases.md is documented with testable recovery behaviors."
+  },
+  {
+    "phase": 7,
+    "title": "Refactor component for zero layout shift",
+    "where": "Claude Code, Cursor, or Gemini CLI",
+    "text": "Goal: Optimize a key UI view in {{PROJECT_NAME}} to achieve zero Cumulative Layout Shift (CLS < 0.05).\n\nFiles to read first:\n- Target view component in apps/web/ or src/components/\n- Global CSS stylesheets and theme tokens\n\nConstraints:\n- Reserve explicit aspect ratio dimensions for images, skeletons, and asynchronous widgets.\n- Do not remove existing accessibility labels or keyboard focus rings.\n- Verify mobile responsiveness down to 390px.\n\nContext:\n- Stack: {{STACK}}\n- Project: {{PROJECT_NAME}}\n\nRequired output:\n1. Skeleton loader matching exact rendered component dimensions.\n2. Font-display swap and preload directives preventing text reflow.\n3. Component test verifying smooth rendering without layout shift.\n\nAcceptance check:\nRun automated Lighthouse or Web Vitals audit; assert CLS score < 0.05 on mobile viewport.\n\nReport format:\nReport component files refactored, skeleton loaders introduced, and unverified custom font CDNs.",
+    "stop_when": "Component renders with CLS < 0.05 and passes component tests."
+  },
+  {
+    "phase": 8,
+    "title": "Idempotency key enforcement on mutating endpoints",
+    "where": "Claude Code, Cursor, or Gemini CLI",
+    "text": "Goal: Implement Idempotency-Key header support for financial and mutating endpoints in {{PROJECT_NAME}}.\n\nFiles to read first:\n- docs/api/openapi.yaml\n- Mutating route controllers and Redis cache client\n\nConstraints:\n- Honor Idempotency-Key header on POST and PATCH requests.\n- Store in-flight and completed responses in Redis with 24-hour expiration.\n- Never execute duplicate transactions for identical idempotency keys.\n\nContext:\n- Project: {{PROJECT_NAME}}\n- Stack: {{STACK}}\n\nRequired output:\n1. Idempotency middleware checking Redis for existing key lock and cached payload.\n2. Integration tests asserting replay of exact cached response without re-executing domain service.\n3. Error response (409 Conflict) if a request with identical key is currently in-flight.\n\nAcceptance check:\nRun integration test sending concurrent identical idempotency keys; verify exactly one mutation executes.\n\nReport format:\nReport middleware files created, test scenarios executed, and unverified Redis multi-region replication.",
+    "stop_when": "Idempotency middleware and concurrent replay integration tests pass cleanly."
+  },
+  {
+    "phase": 9,
+    "title": "Content-Security-Policy and security headers implementation",
+    "where": "Claude Code, Cursor, or Gemini CLI",
+    "text": "Goal: Configure strict Content-Security-Policy (CSP) and HTTP security headers for {{PROJECT_NAME}} on {{STACK}}.\n\nFiles to read first:\n- Server entrypoint or Next.js middleware\n- docs/security/ (if present)\n\nConstraints:\n- Directives must forbid 'unsafe-inline' and 'unsafe-eval' for script-src unless cryptographically nonced.\n- Enforce HSTS with max-age=31536000 and includeSubDomains.\n- Restrict frame-ancestors to 'none' (or X-Frame-Options: DENY).\n\nContext:\n- Project: {{PROJECT_NAME}}\n- Stack: {{STACK}}\n\nRequired output:\n1. Security header middleware configured for production environment.\n2. Integration tests asserting header presence on all HTTP responses.\n3. Documentation in docs/security/headers.md explaining policy directives.\n\nAcceptance check:\nRun integration test asserting presence of CSP, HSTS, X-Content-Type-Options, and Referrer-Policy headers.\n\nReport format:\nReport middleware files modified, test assertions verified, and unverified external script tags.",
+    "stop_when": "Security headers middleware is active and automated header tests pass."
+  },
+  {
+    "phase": "general",
+    "title": "Agent task template",
+    "where": "Claude Code, Cursor, Codex, or Gemini CLI",
+    "text": "Goal: Execute one single focused engineering task for project {{PROJECT_NAME}}.\n\nTask:\n[State the exact single feature, bug fix, or refactor to execute in this session]\n\nFiles to read first:\n- docs/PROJECT_STATUS.md\n- Relevant target source and test files in {{REPO_PATH}}\n\nConstraints:\n- Exactly one task per session: do not modify unrelated modules or refactor unrelated files.\n- Never commit secrets, tokens, or credentials to source code.\n- Follow {{STACK}} conventions and maintain strict typing.\n\nRequired output:\n1. Surgical implementation changes satisfying the task requirements.\n2. Automated tests proving the implementation works and catches regressions.\n3. Update docs/PROJECT_STATUS.md logging the completed action, current phase, and next task.\n\nAcceptance check:\nRun the test runner command; assert 100% passing tests and run git status to verify only relevant files were touched.\n\nReport format:\nConclude by explicitly stating:\n- What code files were changed\n- What tests were executed and passed\n- What was not verified in this session",
+    "stop_when": "The single task is implemented, tests pass, and docs/PROJECT_STATUS.md is updated."
+  }
+]

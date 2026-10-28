@@ -1,0 +1,721 @@
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useReducer,
+  useRef,
+  useState,
+} from 'react';
+import { PHASES } from '../data/playbook';
+import {
+  AppStorageV2,
+  AuthUser,
+  PhaseBlock,
+  ProjectData,
+  ProjectDates,
+  ProjectMode,
+  SyncStatus,
+  WeeklySnapshot,
+} from '../types';
+import { calculateOverallProgress } from '../utils/metrics';
+import {
+  createDefaultProject,
+  loadStorage,
+  MAX_FIELD_LENGTH,
+  MAX_NOTE_LENGTH,
+  saveStorage,
+  StorageLoadResult,
+} from '../utils/storage';
+import { SyncManager } from '../utils/sync';
+import { recordWeeklySnapshot } from '../utils/tracking';
+
+export interface ToastMessage {
+  id: string;
+  text: string;
+  type: 'info' | 'success' | 'warning' | 'error';
+}
+
+interface ProjectContextValue {
+  storage: AppStorageV2;
+  activeProject: ProjectData;
+  storageBlocked: boolean;
+  corruptNotice?: string;
+  toasts: ToastMessage[];
+  addToast: (text: string, type?: ToastMessage['type']) => void;
+  removeToast: (id: string) => void;
+  setActiveProject: (projectId: string) => void;
+  updateField: (key: string, value: string) => void;
+  toggleTask: (taskId: string) => void;
+  updateNote: (phaseId: number, content: string) => void;
+  setMode: (mode: ProjectMode) => void;
+  createProject: (name: string) => void;
+  renameProject: (projectId: string, newName: string) => void;
+  deleteProject: (projectId: string) => boolean;
+  resetProgress: () => void;
+  importProgress: (data: {
+    name: string;
+    mode: ProjectMode;
+    checkedTasks: Record<string, boolean>;
+    notes: Record<number, string>;
+  }) => void;
+  setTheme: (theme: 'auto' | 'light' | 'dark') => void;
+  cycleTheme: () => void;
+
+  // On-track Tracking Actions
+  updateDates: (projectId: string, dates: ProjectDates) => void;
+  setPhaseBlock: (projectId: string, phaseId: number, isBlocked: boolean, reason?: string) => void;
+  recordSnapshot: (projectId: string) => void;
+
+  // Cloud Sync & Auth
+  user: AuthUser | null;
+  authLoading: boolean;
+  syncStatus: SyncStatus;
+  syncNow: () => Promise<void>;
+  login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  register: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  logout: () => Promise<void>;
+  deleteAccount: () => Promise<void>;
+}
+
+type Action =
+  | { type: 'SET_ACTIVE_PROJECT'; payload: string }
+  | { type: 'UPDATE_FIELD'; payload: { key: string; value: string } }
+  | { type: 'TOGGLE_TASK'; payload: string }
+  | { type: 'UPDATE_NOTE'; payload: { phaseId: number; content: string } }
+  | { type: 'SET_MODE'; payload: ProjectMode }
+  | { type: 'CREATE_PROJECT'; payload: string }
+  | { type: 'RENAME_PROJECT'; payload: { id: string; name: string } }
+  | { type: 'DELETE_PROJECT'; payload: string }
+  | { type: 'RESET_PROGRESS' }
+  | {
+      type: 'IMPORT_PROGRESS';
+      payload: {
+        name: string;
+        mode: ProjectMode;
+        checkedTasks: Record<string, boolean>;
+        notes: Record<number, string>;
+      };
+    }
+  | { type: 'SET_THEME'; payload: 'auto' | 'light' | 'dark' }
+  | { type: 'UPDATE_DATES'; payload: { projectId: string; dates: ProjectDates } }
+  | {
+      type: 'SET_PHASE_BLOCK';
+      payload: { projectId: string; phaseId: number; isBlocked: boolean; reason?: string };
+    }
+  | {
+      type: 'RECORD_SNAPSHOT';
+      payload: { projectId: string; snapshot: WeeklySnapshot };
+    }
+  | { type: 'MERGE_PROJECTS'; payload: ProjectData[] };
+
+function projectReducer(state: AppStorageV2, action: Action): AppStorageV2 {
+  const now = new Date().toISOString();
+
+  switch (action.type) {
+    case 'SET_ACTIVE_PROJECT': {
+      if (state.projects.some((p) => p.id === action.payload)) {
+        return { ...state, activeProjectId: action.payload };
+      }
+      return state;
+    }
+
+    case 'UPDATE_FIELD': {
+      const { key, value } = action.payload;
+      const sanitized = value.slice(0, MAX_FIELD_LENGTH);
+      const updatedProjects = state.projects.map((p) => {
+        if (p.id !== state.activeProjectId) return p;
+        return {
+          ...p,
+          fields: { ...p.fields, [key]: sanitized },
+          updatedAt: now,
+        };
+      });
+      return { ...state, projects: updatedProjects };
+    }
+
+    case 'TOGGLE_TASK': {
+      const taskId = action.payload;
+      const updatedProjects = state.projects.map((p) => {
+        if (p.id !== state.activeProjectId) return p;
+        const current = Boolean(p.checkedTasks[taskId]);
+        const nextTasks = { ...p.checkedTasks };
+        if (current) {
+          delete nextTasks[taskId];
+        } else {
+          nextTasks[taskId] = true;
+        }
+        return { ...p, checkedTasks: nextTasks, updatedAt: now };
+      });
+      return { ...state, projects: updatedProjects };
+    }
+
+    case 'UPDATE_NOTE': {
+      const { phaseId, content } = action.payload;
+      const sanitized = content.slice(0, MAX_NOTE_LENGTH);
+      const updatedProjects = state.projects.map((p) => {
+        if (p.id !== state.activeProjectId) return p;
+        return {
+          ...p,
+          notes: { ...p.notes, [phaseId]: sanitized },
+          updatedAt: now,
+        };
+      });
+      return { ...state, projects: updatedProjects };
+    }
+
+    case 'SET_MODE': {
+      const mode = action.payload;
+      const updatedProjects = state.projects.map((p) => {
+        if (p.id !== state.activeProjectId) return p;
+        return { ...p, mode, updatedAt: now };
+      });
+      return { ...state, projects: updatedProjects };
+    }
+
+    case 'CREATE_PROJECT': {
+      const name = action.payload.trim() || 'New Project';
+      const newProj = createDefaultProject(`proj-${Date.now()}`, name);
+      return {
+        ...state,
+        projects: [...state.projects, newProj],
+        activeProjectId: newProj.id,
+      };
+    }
+
+    case 'RENAME_PROJECT': {
+      const { id, name } = action.payload;
+      const cleanName = name.trim() || 'Untitled Project';
+      const updatedProjects = state.projects.map((p) => {
+        if (p.id !== id) return p;
+        return {
+          ...p,
+          name: cleanName,
+          fields: { ...p.fields, PROJECT_NAME: cleanName },
+          updatedAt: now,
+        };
+      });
+      return { ...state, projects: updatedProjects };
+    }
+
+    case 'DELETE_PROJECT': {
+      if (state.projects.length <= 1) {
+        return state; // Never delete last project
+      }
+      const filtered = state.projects.filter((p) => p.id !== action.payload);
+      let nextActive = state.activeProjectId;
+      if (nextActive === action.payload) {
+        nextActive = filtered[0].id;
+      }
+      return { ...state, projects: filtered, activeProjectId: nextActive };
+    }
+
+    case 'RESET_PROGRESS': {
+      const updatedProjects = state.projects.map((p) => {
+        if (p.id !== state.activeProjectId) return p;
+        return {
+          ...p,
+          checkedTasks: {},
+          notes: {},
+          updatedAt: now,
+        };
+      });
+      return { ...state, projects: updatedProjects };
+    }
+
+    case 'IMPORT_PROGRESS': {
+      const { name, mode, checkedTasks, notes } = action.payload;
+      const updatedProjects = state.projects.map((p) => {
+        if (p.id !== state.activeProjectId) return p;
+        return {
+          ...p,
+          name,
+          mode,
+          checkedTasks,
+          notes,
+          fields: { ...p.fields, PROJECT_NAME: name },
+          updatedAt: now,
+        };
+      });
+      return { ...state, projects: updatedProjects };
+    }
+
+    case 'SET_THEME': {
+      return { ...state, theme: action.payload };
+    }
+
+    case 'UPDATE_DATES': {
+      const { projectId, dates } = action.payload;
+      const updatedProjects = state.projects.map((p) => {
+        if (p.id !== projectId) return p;
+        return {
+          ...p,
+          dates: { ...p.dates, ...dates },
+          updatedAt: now,
+        };
+      });
+      return { ...state, projects: updatedProjects };
+    }
+
+    case 'SET_PHASE_BLOCK': {
+      const { projectId, phaseId, isBlocked, reason } = action.payload;
+      const updatedProjects = state.projects.map((p) => {
+        if (p.id !== projectId) return p;
+        const currentBlocks = p.phaseBlocks || {};
+        const newBlock: PhaseBlock = {
+          isBlocked,
+          reason: (reason || '').slice(0, 200),
+          blockedSince: isBlocked
+            ? currentBlocks[phaseId]?.blockedSince || now
+            : '',
+        };
+        return {
+          ...p,
+          phaseBlocks: {
+            ...currentBlocks,
+            [phaseId]: newBlock,
+          },
+          updatedAt: now,
+        };
+      });
+      return { ...state, projects: updatedProjects };
+    }
+
+    case 'RECORD_SNAPSHOT': {
+      const { projectId, snapshot } = action.payload;
+      const updatedProjects = state.projects.map((p) => {
+        if (p.id !== projectId) return p;
+        const currentSnapshots = p.weeklySnapshots || [];
+        return {
+          ...p,
+          weeklySnapshots: [...currentSnapshots, snapshot],
+          updatedAt: now,
+        };
+      });
+      return { ...state, projects: updatedProjects };
+    }
+
+    case 'MERGE_PROJECTS': {
+      const cloudProjects = action.payload;
+      if (!cloudProjects || cloudProjects.length === 0) return state;
+
+      // Merge cloud projects with local projects using LWW (last write wins)
+      const mergedMap = new Map<string, ProjectData>();
+      for (const lp of state.projects) {
+        mergedMap.set(lp.id, lp);
+      }
+
+      for (const cp of cloudProjects) {
+        const local = mergedMap.get(cp.id);
+        if (!local) {
+          mergedMap.set(cp.id, cp);
+        } else {
+          // LWW based on updatedAt
+          const localTime = new Date(local.updatedAt).getTime();
+          const cloudTime = new Date(cp.updatedAt).getTime();
+          if (cloudTime >= localTime) {
+            mergedMap.set(cp.id, cp);
+          }
+        }
+      }
+
+      const mergedList = Array.from(mergedMap.values());
+      const activeExists = mergedList.some((p) => p.id === state.activeProjectId);
+      const nextActive = activeExists ? state.activeProjectId : mergedList[0]?.id || state.activeProjectId;
+
+      return {
+        ...state,
+        projects: mergedList,
+        activeProjectId: nextActive,
+      };
+    }
+
+    default:
+      return state;
+  }
+}
+
+const ProjectContext = createContext<ProjectContextValue | null>(null);
+
+export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [loadResult] = useState<StorageLoadResult>(() => loadStorage());
+  const [storage, dispatch] = useReducer(projectReducer, loadResult.data);
+  const [toasts, setToasts] = useState<ToastMessage[]>([]);
+
+  // Auth state
+  const [user, setUser] = useState<AuthUser | null>(null);
+  const [authLoading, setAuthLoading] = useState(true);
+  const [syncStatus, setSyncStatus] = useState<SyncStatus>('saved-local');
+
+  // Sync Manager ref
+  const syncManagerRef = useRef<SyncManager | null>(null);
+
+  // Initialize Sync Manager
+  useEffect(() => {
+    const sm = new SyncManager(
+      (status) => setSyncStatus(status),
+      (merged) => {
+        dispatch({ type: 'MERGE_PROJECTS', payload: merged });
+      }
+    );
+    syncManagerRef.current = sm;
+
+    return () => {
+      sm.stop();
+    };
+  }, []);
+
+  // Check auth session on mount
+  useEffect(() => {
+    let isMounted = true;
+    async function checkAuth() {
+      try {
+        const res = await fetch('/api/auth/me', {
+          credentials: 'include',
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (isMounted && data.user) {
+            setUser(data.user);
+            setSyncStatus('saved-cloud');
+          }
+        } else {
+          if (isMounted) {
+            setUser(null);
+            setSyncStatus('saved-local');
+          }
+        }
+      } catch {
+        // Server unreachable or offline
+        if (isMounted) {
+          setUser(null);
+          setSyncStatus('saved-local');
+        }
+      } finally {
+        if (isMounted) {
+          setAuthLoading(false);
+        }
+      }
+    }
+    checkAuth();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  // Trigger sync when projects change and user is logged in
+  useEffect(() => {
+    if (user && syncManagerRef.current) {
+      syncManagerRef.current.sync(storage.projects, true);
+    }
+  }, [storage.projects, user]);
+
+  // Apply theme to DOM
+  useEffect(() => {
+    const root = document.documentElement;
+    if (storage.theme === 'auto') {
+      root.removeAttribute('data-theme');
+    } else {
+      root.setAttribute('data-theme', storage.theme);
+    }
+  }, [storage.theme]);
+
+  // Save to localStorage on state changes
+  useEffect(() => {
+    saveStorage(storage);
+  }, [storage]);
+
+  // Check and record weekly snapshot for active project
+  useEffect(() => {
+    const active = storage.projects.find((p) => p.id === storage.activeProjectId);
+    if (!active) return;
+
+    const { percent, done, total } = calculateOverallProgress(
+      PHASES,
+      active.checkedTasks,
+      active.mode
+    );
+
+    const { snapshots, added } = recordWeeklySnapshot(
+      active.weeklySnapshots || [],
+      percent,
+      done,
+      total
+    );
+
+    if (added && snapshots.length > 0) {
+      const latest = snapshots[snapshots.length - 1];
+      dispatch({
+        type: 'RECORD_SNAPSHOT',
+        payload: { projectId: active.id, snapshot: latest },
+      });
+    }
+  }, [storage.activeProjectId, storage.projects]);
+
+  const addToast = useCallback((text: string, type: ToastMessage['type'] = 'info') => {
+    const id = `toast-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
+    setToasts((prev) => [...prev, { id, text, type }]);
+    setTimeout(() => {
+      setToasts((prev) => prev.filter((t) => t.id !== id));
+    }, 3800);
+  }, []);
+
+  const removeToast = useCallback((id: string) => {
+    setToasts((prev) => prev.filter((t) => t.id !== id));
+  }, []);
+
+  const activeProject =
+    storage.projects.find((p) => p.id === storage.activeProjectId) || storage.projects[0];
+
+  const setActiveProject = (projectId: string) => {
+    dispatch({ type: 'SET_ACTIVE_PROJECT', payload: projectId });
+  };
+
+  const updateField = (key: string, value: string) => {
+    dispatch({ type: 'UPDATE_FIELD', payload: { key, value } });
+  };
+
+  const toggleTask = (taskId: string) => {
+    dispatch({ type: 'TOGGLE_TASK', payload: taskId });
+  };
+
+  const updateNote = (phaseId: number, content: string) => {
+    dispatch({ type: 'UPDATE_NOTE', payload: { phaseId, content } });
+  };
+
+  const setMode = (mode: ProjectMode) => {
+    dispatch({ type: 'SET_MODE', payload: mode });
+  };
+
+  const createProject = (name: string) => {
+    dispatch({ type: 'CREATE_PROJECT', payload: name });
+    addToast(`Created project "${name}"`, 'success');
+  };
+
+  const renameProject = (projectId: string, newName: string) => {
+    dispatch({ type: 'RENAME_PROJECT', payload: { id: projectId, name: newName } });
+    addToast(`Renamed project to "${newName}"`, 'success');
+  };
+
+  const deleteProject = (projectId: string): boolean => {
+    if (storage.projects.length <= 1) {
+      addToast('Cannot delete the only remaining project.', 'warning');
+      return false;
+    }
+    const proj = storage.projects.find((p) => p.id === projectId);
+    dispatch({ type: 'DELETE_PROJECT', payload: projectId });
+    addToast(`Deleted project "${proj?.name || projectId}"`, 'info');
+    return true;
+  };
+
+  const resetProgress = () => {
+    dispatch({ type: 'RESET_PROGRESS' });
+    addToast('Project progress and notes reset. Fields retained.', 'info');
+  };
+
+  const importProgress = (data: {
+    name: string;
+    mode: ProjectMode;
+    checkedTasks: Record<string, boolean>;
+    notes: Record<number, string>;
+  }) => {
+    dispatch({ type: 'IMPORT_PROGRESS', payload: data });
+    addToast(`Imported progress for "${data.name}"`, 'success');
+  };
+
+  const setTheme = (theme: 'auto' | 'light' | 'dark') => {
+    dispatch({ type: 'SET_THEME', payload: theme });
+  };
+
+  const cycleTheme = () => {
+    const cycleMap: Record<'auto' | 'light' | 'dark', 'auto' | 'light' | 'dark'> = {
+      auto: 'light',
+      light: 'dark',
+      dark: 'auto',
+    };
+    const next = cycleMap[storage.theme];
+    dispatch({ type: 'SET_THEME', payload: next });
+    addToast(`Theme set to ${next}`, 'info');
+  };
+
+  // Tracking actions
+  const updateDates = (projectId: string, dates: ProjectDates) => {
+    dispatch({ type: 'UPDATE_DATES', payload: { projectId, dates } });
+    addToast('Updated project target timeline', 'success');
+  };
+
+  const setPhaseBlock = (
+    projectId: string,
+    phaseId: number,
+    isBlocked: boolean,
+    reason?: string
+  ) => {
+    dispatch({
+      type: 'SET_PHASE_BLOCK',
+      payload: { projectId, phaseId, isBlocked, reason },
+    });
+    addToast(
+      isBlocked ? `Phase ${phaseId} marked as blocked` : `Phase ${phaseId} unblocked`,
+      isBlocked ? 'warning' : 'success'
+    );
+  };
+
+  const recordSnapshot = (projectId: string) => {
+    const proj = storage.projects.find((p) => p.id === projectId);
+    if (!proj) return;
+
+    const { percent, done, total } = calculateOverallProgress(
+      PHASES,
+      proj.checkedTasks,
+      proj.mode
+    );
+
+    const { snapshots, added } = recordWeeklySnapshot(
+      proj.weeklySnapshots || [],
+      percent,
+      done,
+      total
+    );
+
+    if (added && snapshots.length > 0) {
+      dispatch({
+        type: 'RECORD_SNAPSHOT',
+        payload: { projectId, snapshot: snapshots[snapshots.length - 1] },
+      });
+    }
+  };
+
+  // Auth actions
+  const login = async (email: string, password: string) => {
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ email, password }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        return { success: false, error: data.detail || 'Sign-in failed.' };
+      }
+      setUser(data.user);
+      addToast(`Welcome back, ${data.user.email}!`, 'success');
+      // Trigger initial cloud sync
+      syncManagerRef.current?.sync(storage.projects, true);
+      return { success: true };
+    } catch {
+      return { success: false, error: 'Server unreachable. Please try again.' };
+    }
+  };
+
+  const register = async (email: string, password: string) => {
+    try {
+      const res = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ email, password }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        return { success: false, error: data.detail || 'Registration failed.' };
+      }
+      setUser(data.user);
+      addToast(`Account created! Projects will now sync across devices.`, 'success');
+      syncManagerRef.current?.sync(storage.projects, true);
+      return { success: true };
+    } catch {
+      return { success: false, error: 'Server unreachable. Please try again.' };
+    }
+  };
+
+  const logout = async () => {
+    try {
+      await fetch('/api/auth/logout', {
+        method: 'POST',
+        credentials: 'include',
+      });
+    } catch {}
+    setUser(null);
+    setSyncStatus('saved-local');
+    addToast('Signed out. Local progress retained on this device.', 'info');
+  };
+
+  const deleteAccount = async () => {
+    try {
+      const res = await fetch('/api/auth/me', {
+        method: 'DELETE',
+        credentials: 'include',
+      });
+      if (res.ok) {
+        setUser(null);
+        setSyncStatus('saved-local');
+        addToast('Your account and cloud project data have been permanently deleted.', 'info');
+      }
+    } catch {
+      addToast('Failed to delete cloud account.', 'error');
+    }
+  };
+
+  const syncNow = async () => {
+    if (!user) {
+      addToast('Sign in to sync your projects across devices.', 'info');
+      return;
+    }
+    setSyncStatus('syncing');
+    const success = await syncManagerRef.current?.sync(storage.projects, true);
+    if (success) {
+      addToast('Project sync complete.', 'success');
+    } else {
+      addToast('Sync delayed: offline or server unavailable.', 'warning');
+    }
+  };
+
+  return (
+    <ProjectContext.Provider
+      value={{
+        storage,
+        activeProject,
+        storageBlocked: loadResult.storageBlocked,
+        corruptNotice: loadResult.corruptNotice,
+        toasts,
+        addToast,
+        removeToast,
+        setActiveProject,
+        updateField,
+        toggleTask,
+        updateNote,
+        setMode,
+        createProject,
+        renameProject,
+        deleteProject,
+        resetProgress,
+        importProgress,
+        setTheme,
+        cycleTheme,
+        updateDates,
+        setPhaseBlock,
+        recordSnapshot,
+        user,
+        authLoading,
+        syncStatus,
+        syncNow,
+        login,
+        register,
+        logout,
+        deleteAccount,
+      }}
+    >
+      {children}
+    </ProjectContext.Provider>
+  );
+};
+
+export function useProject(): ProjectContextValue {
+  const ctx = useContext(ProjectContext);
+  if (!ctx) {
+    throw new Error('useProject must be used within a ProjectProvider');
+  }
+  return ctx;
+}

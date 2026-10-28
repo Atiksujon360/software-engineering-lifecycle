@@ -1,0 +1,162 @@
+[
+  {
+    "name": "frontend-design",
+    "kind": "Claude skill",
+    "phases": [7],
+    "when_to_use": "When architecting distinctive, production-grade frontend web interfaces, designing responsive layouts, or configuring design token systems.",
+    "when_not_to_use": "When writing headless backend services, database migrations, or server-side CLI scripts.",
+    "example": "Design an accessible, responsive dashboard layout using CSS custom properties with zero horizontal overflow at 390px."
+  },
+  {
+    "name": "accessibility-review",
+    "kind": "practice",
+    "phases": [2, 7, 10, 11],
+    "when_to_use": "When auditing user interfaces for W3C WCAG 2.2 AA compliance, keyboard operability, color contrast, and proper ARIA semantics.",
+    "when_not_to_use": "When developing non-interactive backend APIs, scheduled batch jobs, or internal CLI tools.",
+    "example": "Audit the authentication and checkout forms against WCAG 2.2 AA criteria and write automated axe-core checks."
+  },
+  {
+    "name": "design-handoff",
+    "kind": "practice",
+    "phases": [3, 7, 17],
+    "when_to_use": "When translating UI/UX mockups, typography scales, spacing tokens, and component specifications into clean frontend component implementations.",
+    "when_not_to_use": "When drafting backend business domain models, database indexing strategies, or server routing.",
+    "example": "Extract spacing tokens, color values, and responsive breakpoint rules from design specs into our Tailwind theme configuration."
+  },
+  {
+    "name": "design-critique",
+    "kind": "practice",
+    "phases": [1, 7, 11],
+    "when_to_use": "When evaluating an existing user interface for visual hierarchy, clutter, readability, inconsistent type scales, and cognitive overload.",
+    "when_not_to_use": "When conducting low-level code review for algorithmic complexity or memory leak profiling.",
+    "example": "Review this dashboard view and identify the top three visual hierarchy defects that confuse first-time users."
+  },
+  {
+    "name": "ux-copy",
+    "kind": "practice",
+    "phases": [2, 6, 7],
+    "when_to_use": "When writing user-facing button labels, empty states, error messages, form field placeholders, and onboarding tooltips.",
+    "when_not_to_use": "When writing internal technical variable names, system logs, or developer code comments.",
+    "example": "Rewrite these five cryptic HTTP error messages into clear, actionable user feedback strings."
+  },
+  {
+    "name": "deep-research",
+    "kind": "Claude skill",
+    "phases": [0, 1, 4, 9],
+    "when_to_use": "When conducting comprehensive technical investigations into competing architectures, complex compliance standards, or unfamiliar third-party APIs.",
+    "when_not_to_use": "When solving straightforward syntax bugs or implementing well-understood CRUD endpoints.",
+    "example": "Investigate production trade-offs between WebSockets and Server-Sent Events for our real-time notification engine."
+  },
+  {
+    "name": "user-research",
+    "kind": "practice",
+    "phases": [1, 2],
+    "when_to_use": "When formulating customer interview protocols, identifying user pain points, and discovering manual workarounds before building software.",
+    "when_not_to_use": "When designing database schemas, query indexing, or CI/CD pipelines.",
+    "example": "Draft a non-leading 30-minute user interview script to uncover manual accounting reconciliation friction."
+  },
+  {
+    "name": "research-synthesis",
+    "kind": "practice",
+    "phases": [1, 2, 3],
+    "when_to_use": "When aggregating multiple user interview transcripts or stakeholder feedback notes into prioritized themes and problem statements.",
+    "when_not_to_use": "When analyzing automated code coverage or performance profiling traces.",
+    "example": "Synthesize these five interview transcripts into a prioritized pain-point matrix with supporting direct user quotes."
+  },
+  {
+    "name": "humanizer",
+    "kind": "practice",
+    "phases": [0, 2, 11, 17],
+    "when_to_use": "When reviewing documentation, commit logs, and PR descriptions to remove robotic, repetitive AI filler words and restore crisp engineering prose.",
+    "when_not_to_use": "When editing machine-readable configuration files, JSON schemas, or strict TypeScript types.",
+    "example": "Review this system documentation and remove marketing fluff, redundant adverbs, and robotic transitional phrases."
+  },
+  {
+    "name": "token-efficiency-audit",
+    "kind": "practice",
+    "phases": [0, 4, 11, 16],
+    "when_to_use": "When optimizing prompt size, file contexts, and coding agent session boundaries to prevent context blowup and runaway API costs.",
+    "when_not_to_use": "When drafting high-level product vision statements or initial brainstorming sessions.",
+    "example": "Audit our prompt templates and repository context files to reduce token payload by 40% without losing structural constraints."
+  },
+  {
+    "name": "skill-creator",
+    "kind": "tool",
+    "phases": [0, 16, 17],
+    "when_to_use": "When authoring reusable agent skill bundles (SKILL.md, references, scripts) to institutionalize team patterns for coding agents.",
+    "when_not_to_use": "When completing a single ad-hoc bugfix that requires no standardized procedural workflow.",
+    "example": "Package our database zero-downtime migration rules and verification checks into a reusable agent skill folder."
+  },
+  {
+    "name": "docx",
+    "kind": "tool",
+    "phases": [0, 2, 17],
+    "when_to_use": "When generating or parsing formal enterprise documents, business requirement dossiers, or customer statements of work in Microsoft Word format.",
+    "when_not_to_use": "When writing in-repo software documentation, which should always be version-controlled Markdown.",
+    "example": "Convert our validated PRD and non-functional requirements into a formal DOCX proposal for enterprise procurement."
+  },
+  {
+    "name": "xlsx",
+    "kind": "tool",
+    "phases": [1, 3, 12, 16],
+    "when_to_use": "When modeling complex financial estimates, cost projections, capacity spreadsheets, or tabular performance benchmark datasets.",
+    "when_not_to_use": "When storing transactional relational application data, which belongs in PostgreSQL.",
+    "example": "Generate an infrastructure cost estimation model comparing multi-AZ container runtimes across traffic tiers in XLSX format."
+  },
+  {
+    "name": "pptx",
+    "kind": "tool",
+    "phases": [0, 3, 17],
+    "when_to_use": "When preparing slide decks for executive stakeholder alignment, milestone reviews, or architecture approval committees.",
+    "when_not_to_use": "When documenting detailed low-level software implementation steps for engineers.",
+    "example": "Generate a concise 5-slide architecture summary deck for the Gate G1 executive scope-lock review."
+  },
+  {
+    "name": "pdf",
+    "kind": "tool",
+    "phases": [0, 2, 17],
+    "when_to_use": "When publishing immutable release certifications, security audit reports, or executive handoff sign-off packets.",
+    "when_not_to_use": "When editing working engineering documents that need continuous team collaboration.",
+    "example": "Export the completed SOC2 compliance checklist and security threat model into an immutable PDF audit artifact."
+  },
+  {
+    "name": "file-reading",
+    "kind": "tool",
+    "phases": [0, 4, 8, 11],
+    "when_to_use": "When inspecting specific source files, package manifests, or logs with precise line-range targeting to conserve context tokens.",
+    "when_not_to_use": "When dumping entire massive repositories into agent context without surgical targeting.",
+    "example": "Read lines 45 through 120 of src/services/billing.ts to inspect the transaction boundary logic."
+  },
+  {
+    "name": "artifact-diagramming",
+    "kind": "tool",
+    "phases": [0, 4, 6, 14],
+    "when_to_use": "When authoring Mermaid or SVG system diagrams, C4 models, sequence diagrams, and lifecycle state machines in documentation.",
+    "when_not_to_use": "When explaining simple scalar configuration parameters that are clearer as a table or list.",
+    "example": "Generate a Mermaid sequence diagram illustrating the JWT authentication handshake and token refresh flow."
+  },
+  {
+    "name": "Claude Code (CLAUDE.md, AGENTS.md)",
+    "kind": "practice",
+    "phases": [0, 4, 11, 16],
+    "when_to_use": "When setting up project operating rules, build/test commands, and architectural boundaries for autonomous coding agents.",
+    "when_not_to_use": "When writing customer marketing materials or end-user facing product manuals.",
+    "example": "Author a concise AGENTS.md file establishing the single-task rule, test commands, and commit message conventions."
+  },
+  {
+    "name": "GitHub Actions",
+    "kind": "tool",
+    "phases": [0, 10, 11, 13, 14],
+    "when_to_use": "When automating continuous integration, automated testing matrices, security scanning, container builds, and deployment workflows.",
+    "when_not_to_use": "When running quick local feedback loops on developer laptops during active coding.",
+    "example": "Write a GitHub Actions workflow with pinned action SHAs, OIDC authentication, and parallelized unit test matrix."
+  },
+  {
+    "name": "Testcontainers",
+    "kind": "tool",
+    "phases": [5, 8, 10],
+    "when_to_use": "When running automated integration tests against real databases (PostgreSQL, Redis) in disposable containers during CI and local testing.",
+    "when_not_to_use": "When running fast, pure domain logic unit tests that should execute in under 10 milliseconds without container overhead.",
+    "example": "Configure a Testcontainers setup in TypeScript that spins up a fresh PostgreSQL container for API route integration tests."
+  }
+]

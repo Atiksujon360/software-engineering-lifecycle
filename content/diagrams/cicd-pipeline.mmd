@@ -1,0 +1,41 @@
+%% Description:
+%% Continuous Integration and Delivery (CI/CD) Pipeline progression.
+%% 1. PR Creation: Triggers parallel fast validation jobs (Lint/Typecheck, Fast Unit Tests, Security SAST/Secret Scan).
+%% 2. Packaging: Multi-stage Docker container build and image signing.
+%% 3. Integration Testing: Containerized integration test suite with ephemeral database.
+%% 4. Preview / Staging Deployment: Ephemeral environment provisioned for stakeholder verification.
+%% 5. Manual Approval Gate: Quality Gate sign-off by release lead.
+%% 6. Production Rollout: Canary / Blue-Green zero-downtime deployment with health check verification.
+
+flowchart TD
+    PUSH([Git Push / Pull Request]) --> TRIGGER["CI Trigger: GitHub Actions"]
+    
+    subgraph STAGE_FAST["Stage 1: Parallel Fast Checks (< 3 min)"]
+        TRIGGER --> LINT["1. Lint & Typecheck<br/>(tsc --noEmit, Biome/ESLint)"]
+        TRIGGER --> UNIT["2. Unit Tests<br/>(node:test / Vitest)"]
+        TRIGGER --> SCAN["3. Security Scan<br/>(TruffleHog, Dependabot, Trivy)"]
+    end
+
+    LINT & UNIT & SCAN --> BUILD["Stage 2: Container Build<br/>(Multi-stage Docker, Non-root)"]
+    
+    BUILD --> INTEGRATION["Stage 3: Integration Tests<br/>(Testcontainers PostgreSQL)"]
+    
+    INTEGRATION --> STAGING["Stage 4: Staging Deployment<br/>(Preview environment + Smoke tests)"]
+    
+    STAGING --> APPROVAL{"Stage 5: Release Approval Gate<br/>(Pass Criteria & Sign-off)"}
+    
+    APPROVAL -- Rejected --> ABORT([Deployment Cancelled])
+    APPROVAL -- Approved --> PROD["Stage 6: Production Rollout<br/>(Zero-Downtime Rolling Update)"]
+    
+    PROD --> HEALTH{"Health Probes Green?<br/>(/healthz & /readyz)"}
+    HEALTH -- Unhealthy --> ROLLBACK["Automated Rollback to Previous Release"]
+    HEALTH -- Healthy --> DONE([Release Verified in Production])
+
+    classDef stage fill:#eff6ff,stroke:#3b82f6,stroke-width:1px;
+    classDef gate fill:#fef3c7,stroke:#d97706,stroke-width:2px;
+    classDef success fill:#d1fae5,stroke:#059669,stroke-width:2px;
+    classDef failure fill:#fee2e2,stroke:#dc2626,stroke-width:2px;
+    class LINT,UNIT,SCAN,BUILD,INTEGRATION,STAGING,PROD stage;
+    class APPROVAL,HEALTH gate;
+    class DONE success;
+    class ABORT,ROLLBACK failure;

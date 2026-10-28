@@ -1,0 +1,51 @@
+%% Description:
+%% Defense-in-Depth Security Architecture across six distinct defensive layers:
+%% 1. Edge Layer: WAF DDoS mitigation, TLS 1.3 encryption, CSP, HSTS, CORS rules.
+%% 2. Identity Layer: OpenID Connect, MFA, JWT RS256 signature verification, RBAC guards.
+%% 3. Application Layer: Strict input validation (Zod schemas), RFC 9457 error insulation, rate limiting.
+%% 4. Data Layer: Parameterized SQL queries (zero SQLi), column encryption at rest, automated backups.
+%% 5. Secrets Layer: Zero credentials in source code, runtime IAM workload identity, secrets vaults.
+%% 6. Supply Chain Layer: Dependabot vulnerability alerts, pinned GitHub Actions hashes, container scans.
+
+flowchart TB
+    subgraph L1["Layer 1: Edge & Perimeter Security"]
+        E1["DDoS Mitigation & Cloudflare/AWS WAF"]
+        E2["Strict Transport Security (HSTS) & TLS 1.3"]
+        E3["Content-Security-Policy (CSP) & CORS Allowlists"]
+    end
+
+    subgraph L2["Layer 2: Identity & Authentication"]
+        I1["OIDC Identity Provider (Auth0/Okta)"]
+        I2["Multi-Factor Authentication (MFA)"]
+        I3["Stateless RS256 JWT Token Verification"]
+        I4["Role-Based Access Control (RBAC) Guard"]
+    end
+
+    subgraph L3["Layer 3: Application & Boundary Defense"]
+        A1["Zod/TypeBox Request Validation (Body, Params, Headers)"]
+        A2["RFC 9457 Problem Details (Zero Leak of Stack Traces)"]
+        A3["Distributed IP & Tenant Rate Limiting"]
+    end
+
+    subgraph L4["Layer 4: Data & Storage Protection"]
+        D1["Parameterized SQL Queries (Zero SQL Injection)"]
+        D2["AES-256 Volume & Column-Level Encryption at Rest"]
+        D3["ACID Transaction Boundaries & Point-in-Time Recovery"]
+    end
+
+    subgraph L5["Layer 5: Secrets & Credential Isolation"]
+        S1["TruffleHog / Git pre-commit Secret Hooks"]
+        S2["Cloud IAM Workload Identity (No Static Long-Lived Keys)"]
+        S3[".env.example Only - Zero Production Credentials in Repos"]
+    end
+
+    subgraph L6["Layer 6: Software Supply Chain Defense"]
+        C1["Dependabot / Renovate Automated Vulnerability PRs"]
+        C2["Pinned GitHub Action Commit SHAs (No Mutable Tags)"]
+        C3["Minimal Distroless / Non-Root Container Base Images"]
+    end
+
+    L1 --> L2 --> L3 --> L4 --> L5 --> L6
+
+    classDef layer fill:#f8fafc,stroke:#64748b,stroke-width:1px;
+    class L1,L2,L3,L4,L5,L6 layer;

@@ -1,0 +1,6 @@
+{
+  "name": "Engineering Lifecycle Playbook",
+  "description": "An interactive checklist and manual guiding software projects from idea validation to handover with AI-agent prompts and portfolio tracking.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

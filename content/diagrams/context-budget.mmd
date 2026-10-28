@@ -1,0 +1,20 @@
+%% Description:
+%% Token context budget allocation for coding agent sessions.
+%% Illustrates how to distribute the active context window across:
+%% - System Rules & Boundaries (AGENTS.md, task goals) ~15%
+%% - Target Interface & Type Schemas ~25%
+%% - Unit & Integration Test Files ~25%
+%% - Working Code & Diff Generation Space ~35%
+%% And explicit exclusions that must never be loaded into context.
+
+pie title Context Window Budget Allocation (Total ~20k Tokens)
+    "System Rules & Task Goals (AGENTS.md)" : 15
+    "Target Schemas & Type Interfaces" : 25
+    "Active Test Suite & Fixtures" : 25
+    "Working Code & Diff Space" : 35
+
+%% Explicit Exclusions from Context:
+%% - node_modules / lockfiles
+%% - Large binary assets / coverage reports
+%% - Unrelated application modules
+%% - Complete unindexed git histories

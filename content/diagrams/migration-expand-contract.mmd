@@ -1,0 +1,46 @@
+%% Description:
+%% The 4-step Expand-and-Contract (Parallel Run) Database Migration Pattern:
+%% Step 1: Expand - Add new nullable column or table; application starts dual-writing.
+%% Step 2: Backfill - Asynchronous background worker migrates legacy historical rows in small batches.
+%% Step 3: Switch - Application reads switch to the new column; old column is now write-only or deprecated.
+%%         [CRITICAL ROLLBACK POINT]: If errors occur during Step 3, switch reads back immediately.
+%% Step 4: Contract - Drop legacy column and triggers in a subsequent release after verification.
+
+flowchart TD
+    START([Begin Schema Evolution]) --> S1
+
+    subgraph STEP1["Step 1: EXPAND (Release N)"]
+        S1["Add new column/table as nullable<br/>(e.g., ALTER TABLE users ADD COLUMN phone_e164 text)"]
+        S1 --> DUAL["Application dual-writes to both old and new columns"]
+    end
+
+    DUAL --> S2
+
+    subgraph STEP2["Step 2: BACKFILL (Asynchronous)"]
+        S2["Batched background worker backfills historical records<br/>(1,000 rows/batch, no table locks)"]
+        S2 --> VERIFY["Verify data parity between old and new fields"]
+    end
+
+    VERIFY --> S3
+
+    subgraph STEP3["Step 3: SWITCH (Release N+1)"]
+        S3["Switch application read queries to new column"]
+        S3 --> MONITOR{"Monitor Error Rates & Latency"}
+        MONITOR -- Errors Detected --> ROLLBACK["[ROLLBACK POINT]<br/>Revert application reads to old column instantly"]
+    end
+
+    MONITOR -- Steady State Verified --> S4
+
+    subgraph STEP4["Step 4: CONTRACT (Release N+2)"]
+        S4["Drop dual-writing code in application"]
+        S4 --> DROP["Drop legacy column and triggers<br/>(ALTER TABLE users DROP COLUMN phone)"]
+    end
+
+    DROP --> FINISH([Migration Complete - Zero Downtime])
+
+    classDef step fill:#eff6ff,stroke:#3b82f6,stroke-width:1px;
+    classDef rollback fill:#fee2e2,stroke:#ef4444,stroke-width:2px;
+    classDef done fill:#dcfce7,stroke:#22c55e,stroke-width:2px;
+    class S1,DUAL,S2,VERIFY,S3,S4,DROP step;
+    class ROLLBACK rollback;
+    class FINISH done;

@@ -1,0 +1,28 @@
+%% Description:
+%% The disciplined execution cycle for autonomous coding agents:
+%% 1. Plan: Read task definition and establish verifiable acceptance criteria.
+%% 2. Read: Surgically inspect only relevant interface files and test suites.
+%% 3. Edit: Apply small, focused unified code changes.
+%% 4. Test: Run deterministic tests locally to assert zero regressions.
+%% 5. Report: Summarize what changed, what was verified, and unverified areas.
+%% 6. Update Status: Record completion in docs/PROJECT_STATUS.md and terminate session.
+
+flowchart TD
+    START([Start Session]) --> PLAN["1. PLAN<br/>Define single task & verify acceptance criteria"]
+    PLAN --> READ["2. READ<br/>Surgically inspect relevant target files only"]
+    READ --> EDIT["3. EDIT<br/>Apply small, surgical code changes"]
+    EDIT --> TEST["4. TEST<br/>Run fast local unit & integration tests"]
+    
+    TEST --> PASS{Tests Pass?}
+    PASS -- No --> FIX["Analyze failure & revise diff"] --> EDIT
+    PASS -- Yes --> REPORT["5. REPORT<br/>State changes, verified tests, and unverified areas"]
+    
+    REPORT --> STATUS["6. UPDATE STATUS<br/>Log completion in docs/PROJECT_STATUS.md"]
+    STATUS --> END([Terminate Session - Next Session Fresh Context])
+
+    classDef step fill:#e8f4fd,stroke:#2563eb,stroke-width:1px,color:#1e3a8a;
+    classDef decision fill:#fff3cd,stroke:#d39e00,stroke-width:2px,color:#856404;
+    classDef terminal fill:#d1fae5,stroke:#059669,stroke-width:2px,color:#065f46;
+    class PLAN,READ,EDIT,TEST,REPORT,STATUS step;
+    class PASS decision;
+    class START,END terminal;
