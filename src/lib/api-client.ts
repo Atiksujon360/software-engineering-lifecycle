@@ -41,10 +41,10 @@ export class ApiClient {
     return response.json();
   }
 
-  async login(password: string): Promise<{ id: number }> {
-    return this.request<{ id: number }>('/api/auth/login', {
+  async login(email: string, password: string): Promise<{ id: number; email: string }> {
+    return this.request<{ id: number; email: string }>('/api/auth/login', {
       method: 'POST',
-      body: JSON.stringify({ password }),
+      body: JSON.stringify({ email, password }),
     });
   }
 
