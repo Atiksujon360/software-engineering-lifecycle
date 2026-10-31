@@ -375,6 +375,45 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
         if (isMounted) {
           setUser({ id: String(me.id), email: 'owner@playbook.local' });
           setSyncStatus('saved-cloud');
+          
+          // Load projects from backend (SQLite is authoritative)
+          try {
+            const projects = await apiClient.getProjects();
+            if (projects.length > 0) {
+              // TODO: Load task states and notes via progress endpoint
+              // For now, merge basic project metadata
+              const backendProjects = projects.map((p: any) => ({
+                id: p.id,
+                slug: p.slug,
+                name: p.name,
+                mode: p.mode,
+                checkedTasks: {},
+                notes: {},
+                fields: {
+                  PROJECT_NAME: p.name,
+                  ONE_LINE: p.oneLine || '',
+                  USERS: p.users || '',
+                  STACK: p.stack || '',
+                  REPO_PATH: p.repoPath || '',
+                  TIMEFRAME: p.timeframe || '',
+                },
+                dates: p.dates ? JSON.parse(p.dates) : undefined,
+                phaseBlocks: p.phaseBlocks ? JSON.parse(p.phaseBlocks) : undefined,
+                weeklySnapshots: p.weeklySnapshots ? JSON.parse(p.weeklySnapshots) : undefined,
+                createdAt: p.createdAt,
+                updatedAt: p.updatedAt,
+              }));
+              
+              dispatch({ type: 'MERGE_PROJECTS', payload: backendProjects });
+              
+              // Set active project to first backend project
+              if (backendProjects.length > 0) {
+                dispatch({ type: 'SET_ACTIVE_PROJECT', payload: backendProjects[0].id });
+              }
+            }
+          } catch (e) {
+            console.error('Failed to load projects from backend:', e);
+          }
         }
       } catch {
         // Server unreachable or offline
@@ -473,16 +512,22 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
     const newChecked = !project.checkedTasks[taskId];
     
-    // Optimistic update
+    // If not authenticated, only use localStorage
+    if (!user) {
+      dispatch({ type: 'TOGGLE_TASK', payload: taskId });
+      return;
+    }
+
+    // Optimistic update when authenticated
     dispatch({ type: 'TOGGLE_TASK', payload: taskId });
 
     try {
       const slug = project.slug || project.id;
       await apiClient.toggleTask(slug, taskId, newChecked);
     } catch (error) {
-      // Revert on error
+      // Revert on error and show warning
       dispatch({ type: 'TOGGLE_TASK', payload: taskId });
-      addToast('Failed to save task. Using local storage.', 'warning');
+      addToast('Failed to save task to server. Changes not saved.', 'error');
     }
   };
 
@@ -490,16 +535,22 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
     const project = activeProject;
     if (!project) return;
 
-    // Optimistic update
+    // If not authenticated, only use localStorage
+    if (!user) {
+      dispatch({ type: 'UPDATE_NOTE', payload: { phaseId, content } });
+      return;
+    }
+
+    // Optimistic update when authenticated
     dispatch({ type: 'UPDATE_NOTE', payload: { phaseId, content } });
 
     try {
       const slug = project.slug || project.id;
       await apiClient.updateNote(slug, phaseId, content);
     } catch (error) {
-      // Revert on error
+      // Revert on error and show warning
       dispatch({ type: 'UPDATE_NOTE', payload: { phaseId, content: project.notes[phaseId] || '' } });
-      addToast('Failed to save note. Using local storage.', 'warning');
+      addToast('Failed to save note to server. Changes not saved.', 'error');
     }
   };
 
@@ -508,6 +559,13 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   const createProject = async (name: string) => {
+    // If not authenticated, only use localStorage
+    if (!user) {
+      dispatch({ type: 'CREATE_PROJECT', payload: name });
+      addToast(`Created project "${name}" (local only)`, 'warning');
+      return;
+    }
+
     const slug = name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
     
     try {
@@ -524,9 +582,8 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
       dispatch({ type: 'MERGE_PROJECTS', payload: [newProj] });
       addToast(`Created project "${name}"`, 'success');
     } catch (error) {
-      // Fallback to local
-      dispatch({ type: 'CREATE_PROJECT', payload: name });
-      addToast(`Created project "${name}" (local only)`, 'warning');
+      // Show error but don't create local copy when authenticated
+      addToast(`Failed to create project: ${error instanceof Error ? error.message : 'Unknown error'}`, 'error');
     }
   };
 
