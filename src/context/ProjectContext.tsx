@@ -379,31 +379,46 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
           
           // Load projects from backend (SQLite is authoritative)
           try {
+            setProjectLoading(true);
             const projects = await apiClient.getProjects();
             if (projects.length > 0) {
-              // TODO: Load task states and notes via progress endpoint
-              // For now, merge basic project metadata
-              const backendProjects = projects.map((p: any) => ({
-                id: p.id,
-                slug: p.slug,
-                name: p.name,
-                mode: p.mode,
-                checkedTasks: {},
-                notes: {},
-                fields: {
-                  PROJECT_NAME: p.name,
-                  ONE_LINE: p.oneLine || '',
-                  USERS: p.users || '',
-                  STACK: p.stack || '',
-                  REPO_PATH: p.repoPath || '',
-                  TIMEFRAME: p.timeframe || '',
-                },
-                dates: p.dates ? JSON.parse(p.dates) : undefined,
-                phaseBlocks: p.phaseBlocks ? JSON.parse(p.phaseBlocks) : undefined,
-                weeklySnapshots: p.weeklySnapshots ? JSON.parse(p.weeklySnapshots) : undefined,
-                createdAt: p.createdAt,
-                updatedAt: p.updatedAt,
-              }));
+              // Load complete state for each project
+              const backendProjects = await Promise.all(
+                projects.map(async (p: any) => {
+                  const fullState = await apiClient.getProjectWithState(p.slug);
+                  const checkedTasks: Record<string, boolean> = {};
+                  fullState.taskStates.forEach((ts: any) => {
+                    if (ts.checked) checkedTasks[ts.taskId] = true;
+                  });
+                  
+                  const notes: Record<number, string> = {};
+                  fullState.notes.forEach((n: any) => {
+                    notes[n.phaseId] = n.body;
+                  });
+                  
+                  return {
+                    id: p.id,
+                    slug: p.slug,
+                    name: p.name,
+                    mode: p.mode,
+                    checkedTasks,
+                    notes,
+                    fields: {
+                      PROJECT_NAME: p.name,
+                      ONE_LINE: p.oneLine || '',
+                      USERS: p.users || '',
+                      STACK: p.stack || '',
+                      REPO_PATH: p.repoPath || '',
+                      TIMEFRAME: p.timeframe || '',
+                    },
+                    dates: p.dates ? JSON.parse(p.dates) : undefined,
+                    phaseBlocks: p.phaseBlocks ? JSON.parse(p.phaseBlocks) : undefined,
+                    weeklySnapshots: p.weeklySnapshots ? JSON.parse(p.weeklySnapshots) : undefined,
+                    createdAt: p.createdAt,
+                    updatedAt: p.updatedAt,
+                  };
+                })
+              );
               
               dispatch({ type: 'MERGE_PROJECTS', payload: backendProjects });
               
@@ -414,6 +429,8 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
             }
           } catch (e) {
             console.error('Failed to load projects from backend:', e);
+          } finally {
+            setProjectLoading(false);
           }
         }
       } catch {
