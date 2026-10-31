@@ -28,8 +28,8 @@ Given multiple projects exist, when the owner opens the portfolio view, then a c
 ### PRD-FR-006 — API integration boundary
 Given the future backend is Java Spring Boot, when frontend data access is refactored, then network access is isolated behind a documented service/API boundary.
 
-### PRD-FR-007 — Prepare authentication integration
-Given authentication is not part of this phase, when the frontend is structured, then future authenticated API integration can be added without embedding credentials or inventing an auth flow.
+### PRD-FR-007 — Preserve and integrate existing authentication
+Given authentication is already implemented in the main branch (bcrypt + session cookies), when the frontend is structured, then the existing authentication system is preserved and prepared for future backend integration without embedding additional credentials or inventing a new auth flow.
 
 ### PRD-FR-008 — Plan GitHub integration
 Given GitHub is the confirmed integration, when requirements are refined, then repository scope, permissions, synchronization, and user actions are agreed before implementation.
@@ -50,13 +50,13 @@ Given users access supported desktop and mobile viewports, when they use core na
 
 ## Out of scope for this setup
 1. Spring Boot backend implementation.
-2. Authentication implementation or changes.
+2. Authentication removal or replacement (existing bcrypt + session cookie auth is preserved).
 3. PostgreSQL schema or migrations.
 4. GitHub OAuth, webhooks, or API synchronization.
 5. AI product features or autonomous agents.
 6. Rewriting the 18 lifecycle phases/content.
 7. Migrating or deleting SQLite data.
-8. Git history rewrite or force-push.
+8. Git history rewrite or force-push (except as authorized in TASK-002 security remediation).
 9. Production deployment or environment changes.
 10. Billing, payments, customer records, or public SaaS tenancy.
 
