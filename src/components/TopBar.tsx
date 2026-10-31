@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import {
   Cloud,
   CloudOff,
+  Database,
   Download,
   FolderPlus,
   HelpCircle,
@@ -34,6 +35,7 @@ interface TopBarProps {
   onOpenDeleteModal: () => void;
   onOpenResetModal: () => void;
   onOpenImportModal: () => void;
+  onOpenMigrationModal: () => void;
   onNavigate: (hash: string) => void;
   currentSearchQuery?: string;
 }
@@ -46,6 +48,7 @@ export const TopBar: React.FC<TopBarProps> = ({
   onOpenDeleteModal,
   onOpenResetModal,
   onOpenImportModal,
+  onOpenMigrationModal,
   onNavigate,
   currentSearchQuery = '',
 }) => {
@@ -139,6 +142,8 @@ export const TopBar: React.FC<TopBarProps> = ({
 
   // Compute status pill text and color
   const renderSyncIndicator = () => {
+    const hasLocalData = typeof localStorage !== 'undefined' && localStorage.getItem('swlp.v2');
+
     if (!user) {
       return (
         <button
@@ -149,6 +154,20 @@ export const TopBar: React.FC<TopBarProps> = ({
         >
           <span className="w-1.5 h-1.5 rounded-full bg-[var(--muted)]" />
           <span>Saved on this device</span>
+        </button>
+      );
+    }
+
+    if (hasLocalData) {
+      return (
+        <button
+          type="button"
+          onClick={onOpenMigrationModal}
+          title="Local data available - migrate to server"
+          className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-medium border border-[var(--amber)]/30 bg-[var(--amber-soft)] text-[var(--amber)] cursor-pointer"
+        >
+          <Database className="w-3 h-3" />
+          <span>Migrate Local Data</span>
         </button>
       );
     }

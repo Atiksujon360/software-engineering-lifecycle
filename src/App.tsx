@@ -21,9 +21,11 @@ import { ResultsPage } from './pages/ResultsPage';
 import { SkillsPage } from './pages/SkillsPage';
 import { StructurePage } from './pages/StructurePage';
 import { TemplatesPage } from './pages/TemplatesPage';
+import { MigrationDialog } from './components/migration/MigrationDialog';
 
 function AppContent() {
   const { route, navigate } = useHashRoute();
+  const { user } = useProjectContext();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Modals state
@@ -32,6 +34,7 @@ function AppContent() {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isResetModalOpen, setIsResetModalOpen] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [isMigrationOpen, setIsMigrationOpen] = useState(false);
 
   // Render current page based on hash route
   const renderPage = () => {
@@ -79,6 +82,7 @@ function AppContent() {
         onOpenDeleteModal={() => setIsDeleteModalOpen(true)}
         onOpenResetModal={() => setIsResetModalOpen(true)}
         onOpenImportModal={() => setIsImportModalOpen(true)}
+        onOpenMigrationModal={() => setIsMigrationOpen(true)}
         onNavigate={navigate}
         currentSearchQuery={currentSearchQuery}
       />
@@ -104,6 +108,7 @@ function AppContent() {
       <DeleteProjectModal isOpen={isDeleteModalOpen} onClose={() => setIsDeleteModalOpen(false)} />
       <ResetProgressModal isOpen={isResetModalOpen} onClose={() => setIsResetModalOpen(false)} />
       <ImportProgressModal isOpen={isImportModalOpen} onClose={() => setIsImportModalOpen(false)} />
+      <MigrationDialog user={user} onClose={() => setIsMigrationOpen(false)} />
 
       {/* Global Toast Notifications */}
       <ToastContainer />
