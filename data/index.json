@@ -1,0 +1,151 @@
+{
+  "generatedAt": "2026-10-31T09:26:49.823Z",
+  "contentVersion": "1",
+  "projects": [
+    {
+      "slug": "test-project",
+      "name": "Test Project",
+      "mode": "new",
+      "overall": {
+        "total": 97,
+        "done": 0,
+        "percent": 0
+      },
+      "phases": [
+        {
+          "id": 0,
+          "title": "Orientation",
+          "done": 0,
+          "total": 5,
+          "percent": 0
+        },
+        {
+          "id": 1,
+          "title": "Idea validation",
+          "done": 0,
+          "total": 5,
+          "percent": 0
+        },
+        {
+          "id": 2,
+          "title": "Requirements",
+          "done": 0,
+          "total": 5,
+          "percent": 0
+        },
+        {
+          "id": 3,
+          "title": "MVP planning",
+          "done": 0,
+          "total": 5,
+          "percent": 0
+        },
+        {
+          "id": 4,
+          "title": "System architecture",
+          "done": 0,
+          "total": 6,
+          "percent": 0
+        },
+        {
+          "id": 5,
+          "title": "Database design",
+          "done": 0,
+          "total": 5,
+          "percent": 0
+        },
+        {
+          "id": 6,
+          "title": "API design",
+          "done": 0,
+          "total": 6,
+          "percent": 0
+        },
+        {
+          "id": 7,
+          "title": "Frontend",
+          "done": 0,
+          "total": 6,
+          "percent": 0
+        },
+        {
+          "id": 8,
+          "title": "Backend",
+          "done": 0,
+          "total": 6,
+          "percent": 0
+        },
+        {
+          "id": 9,
+          "title": "Security",
+          "done": 0,
+          "total": 6,
+          "percent": 0
+        },
+        {
+          "id": 10,
+          "title": "Testing",
+          "done": 0,
+          "total": 6,
+          "percent": 0
+        },
+        {
+          "id": 11,
+          "title": "Code review",
+          "done": 0,
+          "total": 5,
+          "percent": 0
+        },
+        {
+          "id": 12,
+          "title": "Performance",
+          "done": 0,
+          "total": 5,
+          "percent": 0
+        },
+        {
+          "id": 13,
+          "title": "CI/CD",
+          "done": 0,
+          "total": 5,
+          "percent": 0
+        },
+        {
+          "id": 14,
+          "title": "Deployment",
+          "done": 0,
+          "total": 5,
+          "percent": 0
+        },
+        {
+          "id": 15,
+          "title": "Monitoring",
+          "done": 0,
+          "total": 5,
+          "percent": 0
+        },
+        {
+          "id": 16,
+          "title": "Maintenance",
+          "done": 0,
+          "total": 5,
+          "percent": 0
+        },
+        {
+          "id": 17,
+          "title": "Handover",
+          "done": 0,
+          "total": 6,
+          "percent": 0
+        }
+      ],
+      "currentPhase": 0,
+      "nextTask": {
+        "id": "p0-1",
+        "text": "Draft the project charter stating target audience, core problem, and hard non-goals",
+        "doneWhen": "Charter is documented in docs/charter.md and approved by engineering and product leads."
+      },
+      "lastChangeAt": "2026-10-31T09:26:49.823Z"
+    }
+  ]
+}
