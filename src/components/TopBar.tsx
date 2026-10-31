@@ -164,7 +164,7 @@ export const TopBar: React.FC<TopBarProps> = ({
           type="button"
           onClick={onOpenMigrationModal}
           title="Local data available - migrate to server"
-          className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-medium border border-[var(--amber)]/30 bg-[var(--amber-soft)] text-[var(--amber)] cursor-pointer"
+          className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-medium border border-(--amber)/30 bg-(--amber-soft) text-(--amber) cursor-pointer"
         >
           <Database className="w-3 h-3" />
           <span>Migrate Local Data</span>
@@ -176,7 +176,7 @@ export const TopBar: React.FC<TopBarProps> = ({
       return (
         <div
           title="Synchronizing changes with database..."
-          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-medium border border-[var(--cobalt)]/30 bg-[var(--cobalt-soft)] text-[var(--cobalt)]"
+          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-medium border border-(--cobalt)/30 bg-(--cobalt-soft) text-(--cobalt)"
         >
           <RefreshCw className="w-3 h-3 animate-spin" />
           <span>Syncing</span>
@@ -190,7 +190,7 @@ export const TopBar: React.FC<TopBarProps> = ({
           type="button"
           onClick={() => syncNow()}
           title="Server unreachable or browser offline. Click to retry sync."
-          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-medium border border-[var(--amber)]/30 bg-[var(--amber-soft)] text-[var(--amber)] cursor-pointer"
+          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-medium border border-(--amber)/30 bg-(--amber-soft) text-(--amber) cursor-pointer"
         >
           <CloudOff className="w-3 h-3" />
           <span className="hidden md:inline">Offline: changes will sync when you reconnect</span>
@@ -205,7 +205,7 @@ export const TopBar: React.FC<TopBarProps> = ({
         type="button"
         onClick={() => setIsUserAccountModalOpen(true)}
         title={`All changes synced to ${user.email}. Click to view account.`}
-        className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-medium border border-[var(--green)]/30 bg-[var(--green-soft)] text-[var(--green)] cursor-pointer"
+        className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-medium border border-(--green)/30 bg-(--green-soft) text-(--green) cursor-pointer"
       >
         <Cloud className="w-3 h-3" />
         <span>Saved to your account</span>

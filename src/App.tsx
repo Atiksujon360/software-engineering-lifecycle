@@ -9,7 +9,7 @@ import {
 import { Navigation } from './components/Navigation';
 import { ToastContainer } from './components/ToastContainer';
 import { TopBar } from './components/TopBar';
-import { ProjectProvider } from './context/ProjectContext';
+import { ProjectProvider, useProject } from './context/ProjectContext';
 import { useHashRoute } from './hooks/useHashRoute';
 import { AgentsPage } from './pages/AgentsPage';
 import { GalleryPage } from './pages/GalleryPage';
@@ -25,7 +25,7 @@ import { MigrationDialog } from './components/migration/MigrationDialog';
 
 function AppContent() {
   const { route, navigate } = useHashRoute();
-  const { user } = useProjectContext();
+  const { user } = useProject();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Modals state
@@ -67,7 +67,7 @@ function AppContent() {
   const currentSearchQuery = route.page === 'results' ? route.query : '';
 
   return (
-    <div className="min-h-screen flex flex-col bg-[var(--paper)] text-[var(--ink)]">
+    <div className="min-h-screen flex flex-col bg-(--paper) text-(--ink)">
       {/* Accessible skip link */}
       <a href="#main-content" className="skip-link">
         Skip to main content
