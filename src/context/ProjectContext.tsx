@@ -347,6 +347,7 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [user, setUser] = useState<AuthUser | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [syncStatus, setSyncStatus] = useState<SyncStatus>('saved-local');
+  const [projectLoading, setProjectLoading] = useState(false);
 
   // Sync Manager ref
   const syncManagerRef = useRef<SyncManager | null>(null);
@@ -498,8 +499,37 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const activeProject =
     storage.projects.find((p) => p.id === storage.activeProjectId) || storage.projects[0];
 
-  const setActiveProject = (projectId: string) => {
+  const setActiveProject = async (projectId: string) => {
     dispatch({ type: 'SET_ACTIVE_PROJECT', payload: projectId });
+    
+    // If authenticated, load complete state from backend
+    if (user) {
+      const project = storage.projects.find((p) => p.id === projectId);
+      if (project?.slug) {
+        try {
+          const fullState = await apiClient.getProjectWithState(project.slug);
+          // Merge task states and notes
+          const checkedTasks: Record<string, boolean> = {};
+          fullState.taskStates.forEach((ts: any) => {
+            if (ts.checked) checkedTasks[ts.taskId] = true;
+          });
+          
+          const notes: Record<number, string> = {};
+          fullState.notes.forEach((n: any) => {
+            notes[n.phaseId] = n.body;
+          });
+          
+          dispatch({ type: 'IMPORT_PROGRESS', payload: {
+            name: project.name,
+            mode: project.mode,
+            checkedTasks,
+            notes,
+          }});
+        } catch (e) {
+          console.error('Failed to load project state:', e);
+        }
+      }
+    }
   };
 
   const updateField = (key: string, value: string) => {

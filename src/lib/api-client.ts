@@ -104,6 +104,10 @@ export class ApiClient {
     return this.request<any>(`/api/projects/${slug}/progress`);
   }
 
+  async getProjectWithState(slug: string): Promise<any> {
+    return this.request<any>(`/api/projects/${slug}/progress`);
+  }
+
   async exportProject(slug: string): Promise<any> {
     return this.request<any>(`/api/projects/${slug}/export`);
   }
