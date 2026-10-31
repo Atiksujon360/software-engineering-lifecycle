@@ -1,7 +1,7 @@
 # Project Status
 
 - **Mode:** Existing project — setup and governance.
-- **Date:** 2026-10-31.
+- **Date:** 2026-11-01.
 - **Current milestone:** M1 — Foundation.
 - **Current phase:** Phase 2 documentation completed; TASK-001 approved and complete.
 - **Repository:** `Atiksujon360/software-engineering-lifecycle`.
@@ -9,15 +9,14 @@
 - **Production deployment:** Not authorized.
 - **Push to main:** Not authorized.
 
-## Last session summary
-- TASK-001 completed: Reviewed and approved project scope, unresolved requirements, and proposed non-functional targets.
-- Authentication contradiction resolved: Existing bcrypt + session cookie authentication is preserved (not removed) per owner approval.
-- Switched to `setup/initial-scaffold` branch for setup work per AGENTS.md.
-- Confirmed team users, all-project/activity scope, combined lifecycle and project management workflow, project/task-only initial data scope, existing authentication preserved, GitHub as confirmed integration, audit-first frontend architecture, and preservation of existing backend.
-- Inspected public `main`: React/Vite/TypeScript frontend, Express/SQLite backend with authentication, Bun lockfile, and 18-phase source at `src/data/playbook.ts`.
-- Public `main` still lists `data/` and `.aistudio/`; earlier local cleanup is not reflected on this branch.
-- Created setup branch from inspected main commit. No application code or backend files were changed.
-- Updated docs/PRD.md and docs/DECISIONS.md to reflect authentication reality and approved decisions.
+## Last session summary (2026-11-01)
+- Frontend vibe-coding environment setup initiated on `setup/initial-scaffold` branch.
+- AGENTS.md updated with test-first workflow requirement and PROJECT_STATUS.md update requirement.
+- Verified MCP servers: context7 (library docs) and github-mcp-server (GitHub integration) are operational.
+- Test-first workflow validated: Created failing test for AGENTS.md rules, applied changes, verified tests pass.
+- docs/PROJECT.md exists in frontend repo; no changes made to application code or backend.
+- Backend setup will be on separate branch `setup/backend-status` after frontend approval.
+- Pending: Step 2 (MCP server configuration), Step 3 (VS Code extensions), Step 4 (security checks).
 
 ## Next action
 TASK-002: Resolve public repository security blockers: verify secret rotation and plan Git history remediation for committed data and .aistudio content.
@@ -50,6 +49,8 @@ TASK-002: Resolve public repository security blockers: verify secret rotation an
 - Existing Express/SQLite backend is preserved and not reviewed or changed by this documentation-only phase.
 
 ## Verification status
-- Documentation branch created.
-- Documentation files prepared in this commit.
-- No frontend build, tests, lint, secret scan, or deployment checks were run in this documentation-only phase.
+- AGENTS.md test-first workflow: ✅ PASS (vitest run tests/agents-rules.test.ts)
+- MCP server context7: ✅ OPERATIONAL (resolve-library-id, query-docs tools available)
+- MCP server github-mcp-server: ✅ OPERATIONAL (issues, PRs, CI tools available)
+- docs/PROJECT.md: ✅ EXISTS
+- Pending: VS Code extensions check, security tools verification (Gitleaks, Semgrep).

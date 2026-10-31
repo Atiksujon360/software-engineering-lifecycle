@@ -70,7 +70,16 @@ export function MigrationDialog({ user, onClose }: { user: AuthUser | null; onCl
   };
 
   const handlePreview = () => {
-    setStage('preview');
+    setStage("preview");
+  };
+
+  const handleStartFresh = () => {
+    // Clear all localStorage data
+    localStorage.clear();
+    // Close dialog
+    onClose();
+    // Reload page to start fresh
+    window.location.reload();
   };
 
   const handleConfirm = async () => {
@@ -134,23 +143,19 @@ export function MigrationDialog({ user, onClose }: { user: AuthUser | null; onCl
     }
   };
 
-  // Allow migration dialog to open regardless of auth state
-  // Users can browse without login, but need auth to migrate to server
-      </div>
-    );
-  }
-
   if (stage === 'detect') {
     return (
       <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4">
         <div className="bg-white rounded-lg p-6 max-w-2xl w-full max-h-[80vh] overflow-y-auto">
           <h2 className="text-xl font-bold mb-4">Data Migration</h2>
-          
+
           {loading ? (
             <p className="text-gray-600">Detecting local data...</p>
           ) : projects.length === 0 ? (
             <div>
-              <p className="text-gray-600 mb-4">No local data found to migrate.</p>
+              <p className="text-gray-600 mb-4">
+                No local data found to migrate.
+              </p>
               <button
                 onClick={onClose}
                 className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
@@ -161,24 +166,43 @@ export function MigrationDialog({ user, onClose }: { user: AuthUser | null; onCl
           ) : (
             <div>
               <p className="text-gray-600 mb-4">
-                Found {projects.length} project{projects.length !== 1 ? 's' : ''} in local storage.
+                Found {projects.length} project
+                {projects.length !== 1 ? "s" : ""} in local storage.
               </p>
               <div className="space-y-2 mb-4">
                 {projects.map((p, i) => (
                   <div key={i} className="p-3 border rounded">
                     <div className="font-medium">{p.name}</div>
                     <div className="text-sm text-gray-600">
-                      Mode: {p.mode} • Tasks: {p.taskCount} • Notes: {p.noteCount}
+                      Mode: {p.mode} • Tasks: {p.taskCount} • Notes:{" "}
+                      {p.noteCount}
                     </div>
                   </div>
                 ))}
               </div>
+
+              {!user && (
+                <div className="bg-yellow-50 border border-yellow-200 rounded p-3 mb-4">
+                  <p className="text-sm text-yellow-800">
+                    <strong>Authentication Required:</strong> You must be logged
+                    in to migrate data to the server.
+                  </p>
+                </div>
+              )}
+
               <div className="flex gap-2">
                 <button
                   onClick={handlePreview}
-                  className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                  disabled={!user}
+                  className={`px-4 py-2 rounded ${!user ? "bg-gray-300 text-gray-500 cursor-not-allowed" : "bg-blue-600 text-white hover:bg-blue-700"}`}
                 >
                   Review & Migrate
+                </button>
+                <button
+                  onClick={handleStartFresh}
+                  className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+                >
+                  Start Fresh (Clear All)
                 </button>
                 <button
                   onClick={onClose}

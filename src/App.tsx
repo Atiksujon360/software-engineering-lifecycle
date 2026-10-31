@@ -36,6 +36,9 @@ function AppContent() {
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [isMigrationOpen, setIsMigrationOpen] = useState(false);
 
+  // Disable migration dialog for now - allow guest access
+  const showMigrationDialog = false;
+
   // Render current page based on hash route
   const renderPage = () => {
     switch (route.page) {
@@ -108,7 +111,7 @@ function AppContent() {
       <DeleteProjectModal isOpen={isDeleteModalOpen} onClose={() => setIsDeleteModalOpen(false)} />
       <ResetProgressModal isOpen={isResetModalOpen} onClose={() => setIsResetModalOpen(false)} />
       <ImportProgressModal isOpen={isImportModalOpen} onClose={() => setIsImportModalOpen(false)} />
-      <MigrationDialog user={user} onClose={() => setIsMigrationOpen(false)} />
+      {showMigrationDialog && <MigrationDialog user={user} onClose={() => setIsMigrationOpen(false)} />}
 
       {/* Global Toast Notifications */}
       <ToastContainer />

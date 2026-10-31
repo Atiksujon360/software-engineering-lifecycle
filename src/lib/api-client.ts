@@ -48,6 +48,13 @@ export class ApiClient {
     });
   }
 
+  async register(email: string, password: string): Promise<{ id: number; email: string }> {
+    return this.request<{ id: number; email: string }>('/api/auth/register', {
+      method: 'POST',
+      body: JSON.stringify({ email, password }),
+    });
+  }
+
   async logout(): Promise<{ success: boolean }> {
     return this.request<{ success: boolean }>('/api/auth/logout', {
       method: 'POST',

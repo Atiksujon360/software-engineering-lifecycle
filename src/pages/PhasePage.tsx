@@ -32,9 +32,32 @@ interface PhasePageProps {
 }
 
 export const PhasePage: React.FC<PhasePageProps> = ({ phaseId, onNavigate }) => {
-  const { activeProject, toggleTask, updateNote, addToast } = useProject();
+  const { activeProject, toggleTask, updateNote, addToast, user } = useProject();
   const [manualCopyText, setManualCopyText] = useState<string | null>(null);
   const [isBlockModalOpen, setIsBlockModalOpen] = useState(false);
+
+  // If user is not logged in, show login prompt instead of phase content
+  if (!user) {
+    return (
+      <div className="space-y-8 max-w-6xl mx-auto pb-12">
+        <div className="flex items-center justify-center p-12">
+          <div className="text-center space-y-4">
+            <Lock className="w-16 h-16 mx-auto text-(--muted)" />
+            <h2 className="text-2xl font-bold">Sign In Required</h2>
+            <p className="text-(--muted) max-w-md">
+              Please sign in to view phase details and track your progress.
+            </p>
+            <button
+              onClick={() => onNavigate('#signin')}
+              className="px-6 py-3 bg-(--brand) text-white rounded-lg hover:bg-(--brand-hover)"
+            >
+              Sign In
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const phase = PHASES.find((p) => p.id === phaseId) || PHASES[0];
   const { total, done, percent } = calculatePhaseProgress(
@@ -87,14 +110,14 @@ export const PhasePage: React.FC<PhasePageProps> = ({ phaseId, onNavigate }) => 
           <button
             type="button"
             onClick={() => onNavigate('overview')}
-            className="text-xs font-semibold text-[var(--muted)] hover:text-[var(--ink)] inline-flex items-center gap-1 cursor-pointer"
+            className="text-xs font-semibold text-(--muted) hover:text-[var(--ink)] inline-flex items-center gap-1 cursor-pointer"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
             <span>Back to Overview</span>
           </button>
 
           <div className="flex items-center gap-2">
-            <span className="text-xs font-mono font-semibold text-[var(--muted)]">
+            <span className="text-xs font-mono font-semibold text-(--muted)">
               Stage: <span className="capitalize text-[var(--ink)]">{phase.group}</span>
             </span>
             <span className="text-xs font-mono px-2 py-0.5 rounded-full bg-[var(--surface-raised)] border border-[var(--line)] text-[var(--ink)] font-bold">
@@ -167,7 +190,7 @@ export const PhasePage: React.FC<PhasePageProps> = ({ phaseId, onNavigate }) => 
             </div>
           </div>
 
-          <p className="text-sm font-medium text-[var(--muted)] leading-relaxed">{phase.tagline}</p>
+          <p className="text-sm font-medium text-(--muted) leading-relaxed">{phase.tagline}</p>
 
           <div className="pt-2 border-t border-[var(--line)] grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
             <div className="space-y-1">
@@ -180,7 +203,7 @@ export const PhasePage: React.FC<PhasePageProps> = ({ phaseId, onNavigate }) => 
               <span className="font-bold text-[var(--ink)] uppercase tracking-wider text-[10px]">
                 Key Deliverables
               </span>
-              <ul className="list-disc list-inside space-y-0.5 text-[var(--muted)]">
+              <ul className="list-disc list-inside space-y-0.5 text-(--muted)">
                 {phase.outputs.map((out, idx) => (
                   <li key={idx} className="leading-relaxed">
                     {out}
@@ -211,7 +234,7 @@ export const PhasePage: React.FC<PhasePageProps> = ({ phaseId, onNavigate }) => 
           )}
 
           <div>
-            <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--muted)] block">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-(--muted) block">
               {firstOpenTask ? 'Next Recommended Action' : 'Phase Milestone Status'}
             </span>
             <p className="font-semibold text-sm text-[var(--ink)]">
@@ -259,11 +282,11 @@ export const PhasePage: React.FC<PhasePageProps> = ({ phaseId, onNavigate }) => 
         <div className="flex items-center justify-between pb-2 border-b border-[var(--line)]">
           <div>
             <h2 className="text-base font-bold text-[var(--ink)]">Phase Checklist</h2>
-            <p className="text-xs text-[var(--muted)]">
+            <p className="text-xs text-(--muted)">
               Every task has an explicit verifiable definition of done.
             </p>
           </div>
-          <span className="text-xs font-mono font-semibold text-[var(--muted)]">
+          <span className="text-xs font-mono font-semibold text-(--muted)">
             {phase.tasks.filter((t) => activeProject.checkedTasks[t.id]).length}/{phase.tasks.length} standard tasks
           </span>
         </div>
@@ -278,7 +301,7 @@ export const PhasePage: React.FC<PhasePageProps> = ({ phaseId, onNavigate }) => 
                 key={task.id}
                 className={`checklist-item p-3.5 rounded-xl border transition-all ${
                   isChecked
-                    ? 'border-[var(--line)] bg-[var(--surface-raised)]/60 text-[var(--muted)]'
+                    ? 'border-[var(--line)] bg-[var(--surface-raised)]/60 text-(--muted)'
                     : 'border-[var(--line)] bg-[var(--surface)] text-[var(--ink)] hover:border-[var(--cobalt)] shadow-xs'
                 }`}
               >
@@ -294,15 +317,15 @@ export const PhasePage: React.FC<PhasePageProps> = ({ phaseId, onNavigate }) => 
                     <label
                       htmlFor={checkboxId}
                       className={`text-xs font-semibold cursor-pointer block leading-snug ${
-                        isChecked ? 'line-through text-[var(--muted)]' : 'text-[var(--ink)]'
+                        isChecked ? 'line-through text-(--muted)' : 'text-[var(--ink)]'
                       }`}
                     >
-                      <span className="font-mono text-[10px] text-[var(--muted)] mr-1.5 font-bold">
+                      <span className="font-mono text-[10px] text-(--muted) mr-1.5 font-bold">
                         {task.id}
                       </span>
                       {task.text}
                     </label>
-                    <p className="text-[11px] text-[var(--muted)] leading-relaxed">
+                    <p className="text-[11px] text-(--muted) leading-relaxed">
                       <strong className="text-[var(--ink)] font-medium">Done when:</strong> {task.doneWhen}
                     </p>
                   </div>
@@ -323,11 +346,11 @@ export const PhasePage: React.FC<PhasePageProps> = ({ phaseId, onNavigate }) => 
                 <span>Existing Project Mode Active</span>
               </div>
               <h2 className="text-base font-bold text-[var(--ink)]">Legacy Intake Checklist</h2>
-              <p className="text-xs text-[var(--muted)]">
+              <p className="text-xs text-(--muted)">
                 Eight mandatory audit tasks required when onboarding inherited codebases.
               </p>
             </div>
-            <span className="text-xs font-mono font-semibold text-[var(--muted)]">
+            <span className="text-xs font-mono font-semibold text-(--muted)">
               {phase.existing.filter((t) => activeProject.checkedTasks[t.id]).length}/8 intake tasks
             </span>
           </div>
@@ -342,7 +365,7 @@ export const PhasePage: React.FC<PhasePageProps> = ({ phaseId, onNavigate }) => 
                   key={task.id}
                   className={`checklist-item p-3.5 rounded-xl border transition-all ${
                     isChecked
-                      ? 'border-[var(--line)] bg-[var(--surface-raised)]/60 text-[var(--muted)]'
+                      ? 'border-[var(--line)] bg-[var(--surface-raised)]/60 text-(--muted)'
                       : 'border-amber-200 dark:border-amber-900 bg-[var(--surface)] text-[var(--ink)] hover:border-[var(--amber)] shadow-xs'
                   }`}
                 >
@@ -358,7 +381,7 @@ export const PhasePage: React.FC<PhasePageProps> = ({ phaseId, onNavigate }) => 
                       <label
                         htmlFor={checkboxId}
                         className={`text-xs font-semibold cursor-pointer block leading-snug ${
-                          isChecked ? 'line-through text-[var(--muted)]' : 'text-[var(--ink)]'
+                          isChecked ? 'line-through text-(--muted)' : 'text-[var(--ink)]'
                         }`}
                       >
                         <span className="font-mono text-[10px] text-[var(--amber)] mr-1.5 font-bold">
@@ -366,7 +389,7 @@ export const PhasePage: React.FC<PhasePageProps> = ({ phaseId, onNavigate }) => 
                         </span>
                         {task.text}
                       </label>
-                      <p className="text-[11px] text-[var(--muted)] leading-relaxed">
+                      <p className="text-[11px] text-(--muted) leading-relaxed">
                         <strong className="text-[var(--ink)] font-medium">Done when:</strong> {task.doneWhen}
                       </p>
                     </div>
@@ -383,11 +406,11 @@ export const PhasePage: React.FC<PhasePageProps> = ({ phaseId, onNavigate }) => 
         <div className="flex items-center justify-between pb-2 border-b border-[var(--line)]">
           <div>
             <h2 className="text-base font-bold text-[var(--ink)]">AI Agent Prompts</h2>
-            <p className="text-xs text-[var(--muted)]">
+            <p className="text-xs text-(--muted)">
               Variables like <code className="text-[11px] font-mono">{'{{PROJECT_NAME}}'}</code> are substituted live with your project fields.
             </p>
           </div>
-          <span className="text-xs font-mono font-semibold text-[var(--muted)]">
+          <span className="text-xs font-mono font-semibold text-(--muted)">
             {phase.prompts.length} Prompts
           </span>
         </div>
@@ -404,7 +427,7 @@ export const PhasePage: React.FC<PhasePageProps> = ({ phaseId, onNavigate }) => 
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-[var(--line)]">
                   <div>
                     <h3 className="text-sm font-bold text-[var(--ink)]">{prompt.title}</h3>
-                    <span className="text-[10px] text-[var(--muted)]">Role Persona: </span>
+                    <span className="text-[10px] text-(--muted)">Role Persona: </span>
                     <span className="text-[10px] font-semibold text-[var(--cobalt)]">
                       {prompt.role}
                     </span>
@@ -426,7 +449,7 @@ export const PhasePage: React.FC<PhasePageProps> = ({ phaseId, onNavigate }) => 
                   </pre>
                 </div>
 
-                <div className="text-[11px] text-[var(--muted)] flex items-center gap-1.5">
+                <div className="text-[11px] text-(--muted) flex items-center gap-1.5">
                   <span className="font-semibold text-[var(--ink)]">Expected Output:</span>
                   <span>{prompt.expectedOutput}</span>
                 </div>
@@ -440,7 +463,7 @@ export const PhasePage: React.FC<PhasePageProps> = ({ phaseId, onNavigate }) => 
       <section className="space-y-4">
         <div className="pb-2 border-b border-[var(--line)]">
           <h2 className="text-base font-bold text-[var(--ink)]">Phase Notes & Observations</h2>
-          <p className="text-xs text-[var(--muted)]">
+          <p className="text-xs text-(--muted)">
             Field advice from staff engineers plus your project-specific scratchpad (stored per project).
           </p>
         </div>
@@ -453,7 +476,7 @@ export const PhasePage: React.FC<PhasePageProps> = ({ phaseId, onNavigate }) => 
               className="p-3.5 rounded-xl border border-[var(--line)] bg-[var(--surface)] text-xs space-y-2 flex flex-col justify-between"
             >
               <div className="space-y-1">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--muted)]">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-(--muted)">
                   Engineering Tip #{idx + 1}
                 </span>
                 <p className="text-[var(--ink)] leading-relaxed">{note}</p>
@@ -462,7 +485,7 @@ export const PhasePage: React.FC<PhasePageProps> = ({ phaseId, onNavigate }) => 
                 <button
                   type="button"
                   onClick={() => handleCopyNote(note)}
-                  className="text-[11px] text-[var(--muted)] hover:text-[var(--ink)] inline-flex items-center gap-1 cursor-pointer"
+                  className="text-[11px] text-(--muted) hover:text-[var(--ink)] inline-flex items-center gap-1 cursor-pointer"
                 >
                   <Copy className="w-3 h-3" />
                   <span>Copy tip</span>
@@ -481,7 +504,7 @@ export const PhasePage: React.FC<PhasePageProps> = ({ phaseId, onNavigate }) => 
             >
               Project Phase Scratchpad (Phase {phase.id})
             </label>
-            <span className="text-[10px] font-mono text-[var(--muted)]">
+            <span className="text-[10px] font-mono text-(--muted)">
               {userNote.length}/{MAX_NOTE_LENGTH} characters
             </span>
           </div>
@@ -494,7 +517,7 @@ export const PhasePage: React.FC<PhasePageProps> = ({ phaseId, onNavigate }) => 
             placeholder="Record team decisions, blockers, edge cases, or deployment logs for this phase..."
             className="w-full text-xs font-mono p-3 rounded-lg border border-[var(--line)] bg-[var(--paper)] text-[var(--ink)] focus:outline-hidden focus:ring-2 focus:ring-[var(--focus-ring)] leading-relaxed"
           />
-          <div className="flex items-center justify-between text-[11px] text-[var(--muted)]">
+          <div className="flex items-center justify-between text-[11px] text-(--muted)">
             <span>Notes auto-save continuously to local storage.</span>
             {userNote.length > 0 && (
               <button
@@ -516,7 +539,7 @@ export const PhasePage: React.FC<PhasePageProps> = ({ phaseId, onNavigate }) => 
         <section className="space-y-3">
           <div className="pb-2 border-b border-[var(--line)]">
             <h2 className="text-sm font-bold text-[var(--ink)]">Authoritative Resources</h2>
-            <p className="text-[11px] text-[var(--muted)]">Stable HTTPS references and standards.</p>
+            <p className="text-[11px] text-(--muted)">Stable HTTPS references and standards.</p>
           </div>
 
           <div className="space-y-2">
@@ -532,13 +555,13 @@ export const PhasePage: React.FC<PhasePageProps> = ({ phaseId, onNavigate }) => 
                   <span className="text-xs font-bold text-[var(--ink)] group-hover:text-[var(--cobalt)]">
                     {res.title}
                   </span>
-                  <ExternalLink className="w-3 h-3 text-[var(--muted)] group-hover:text-[var(--cobalt)] shrink-0" />
+                  <ExternalLink className="w-3 h-3 text-(--muted) group-hover:text-[var(--cobalt)] shrink-0" />
                 </div>
                 <div className="flex items-center gap-2 mt-1">
-                  <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-[var(--surface-raised)] border border-[var(--line)] text-[var(--muted)] font-semibold">
+                  <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-[var(--surface-raised)] border border-[var(--line)] text-(--muted) font-semibold">
                     {res.source}
                   </span>
-                  <span className="text-[11px] text-[var(--muted)] truncate">
+                  <span className="text-[11px] text-(--muted) truncate">
                     {res.description}
                   </span>
                 </div>
@@ -551,7 +574,7 @@ export const PhasePage: React.FC<PhasePageProps> = ({ phaseId, onNavigate }) => 
         <section className="space-y-3">
           <div className="pb-2 border-b border-[var(--line)]">
             <h2 className="text-sm font-bold text-[var(--ink)]">Competency Skills</h2>
-            <p className="text-[11px] text-[var(--muted)]">Engineering capabilities covered.</p>
+            <p className="text-[11px] text-(--muted)">Engineering capabilities covered.</p>
           </div>
 
           <div className="space-y-2">
@@ -572,7 +595,7 @@ export const PhasePage: React.FC<PhasePageProps> = ({ phaseId, onNavigate }) => 
                     {skill.level}
                   </span>
                 </div>
-                <p className="text-[11px] text-[var(--muted)] leading-relaxed">
+                <p className="text-[11px] text-(--muted) leading-relaxed">
                   {skill.description}
                 </p>
               </div>

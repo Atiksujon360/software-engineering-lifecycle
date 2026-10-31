@@ -742,8 +742,16 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   const register = async (email: string, password: string) => {
-    // Single-owner backend - registration not supported
-    return { success: false, error: 'Registration not supported. Use the owner account.' };
+    try {
+      const { id, email: userEmail } = await apiClient.register(email, password);
+      setUser({ id: String(id), email: userEmail });
+      addToast('Account created successfully!', 'success');
+      // Trigger initial cloud sync
+      syncManagerRef.current?.sync(storage.projects, true);
+      return { success: true };
+    } catch (error) {
+      return { success: false, error: error instanceof Error ? error.message : 'Registration failed.' };
+    }
   };
 
   const logout = async () => {
@@ -756,8 +764,8 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   const deleteAccount = async () => {
-    // Single-owner backend - account deletion not supported
-    addToast('Account deletion not supported in single-owner mode.', 'error');
+    // Account deletion is not implemented yet
+    addToast('Account deletion will be available in a future update.', 'info');
   };
 
   const syncNow = async () => {

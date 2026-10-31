@@ -1,13 +1,30 @@
 import React, { useState } from 'react';
-import { Copy, FileCode, FolderTree, Terminal } from 'lucide-react';
+import { Copy, FileCode, FolderTree, Lock, Terminal } from 'lucide-react';
 import { ManualCopyModal } from '../components/Modals';
 import { useProject } from '../context/ProjectContext';
 import { REPO_FILES, REPO_TREE } from '../data/playbook';
 import { copyToClipboard, substituteVariables } from '../utils/prompts';
 
 export const StructurePage: React.FC = () => {
-  const { activeProject, addToast } = useProject();
+  const { activeProject, addToast, user } = useProject();
   const [manualCopyText, setManualCopyText] = useState<string | null>(null);
+
+  // If user is not logged in, show login prompt
+  if (!user) {
+    return (
+      <div className="space-y-8 max-w-6xl mx-auto pb-12">
+        <div className="flex items-center justify-center p-12">
+          <div className="text-center space-y-4">
+            <Lock className="w-16 h-16 mx-auto text-(--muted)" />
+            <h2 className="text-2xl font-bold">Sign In Required</h2>
+            <p className="text-(--muted) max-w-md">
+              Please sign in to view repository structure templates.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const treeSubstituted = substituteVariables(REPO_TREE, activeProject.fields);
 

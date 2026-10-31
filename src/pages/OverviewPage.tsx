@@ -39,6 +39,7 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ onNavigate }) => {
     setMode,
     storageBlocked,
     corruptNotice,
+    user,
   } = useProject();
 
   const [isDatesModalOpen, setIsDatesModalOpen] = useState(false);
@@ -181,6 +182,29 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ onNavigate }) => {
       </div>
     );
   };
+
+  // If user is not logged in, show login prompt instead of project data
+  if (!user) {
+    return (
+      <div className="space-y-8 max-w-6xl mx-auto pb-12">
+        <div className="flex items-center justify-center p-12">
+          <div className="text-center space-y-4">
+            <Lock className="w-16 h-16 mx-auto text-(--muted)" />
+            <h2 className="text-2xl font-bold">Sign In Required</h2>
+            <p className="text-(--muted) max-w-md">
+              Please sign in to view your projects and track your progress through the engineering lifecycle.
+            </p>
+            <button
+              onClick={() => onNavigate('#signin')}
+              className="px-6 py-3 bg-(--brand) text-white rounded-lg hover:bg-(--brand-hover)"
+            >
+              Sign In
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8 max-w-6xl mx-auto pb-12">

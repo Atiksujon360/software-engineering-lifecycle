@@ -11,6 +11,7 @@ Before every change, read `docs/PROJECT.md`, `docs/PROJECT_STATUS.md`, the relev
 - Do not modify the existing backend during frontend-only work.
 - Preserve all 18 lifecycle phases and content.
 - No production deploy, data deletion, or Git history rewrite without explicit approval.
+- Write a failing test first, then implement, and show the test output.
 
 ## Engineering constraints
 - No new dependencies, schema changes, auth changes, or integrations without approval.
@@ -27,3 +28,4 @@ Before every change, read `docs/PROJECT.md`, `docs/PROJECT_STATUS.md`, the relev
 - Use Conventional Commits.
 - Do not commit, push, merge, or deploy unless explicitly authorized.
 - Report blockers and unverified behavior honestly.
+- Update PROJECT_STATUS.md at the end of each session.
