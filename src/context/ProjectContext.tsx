@@ -467,21 +467,67 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
     dispatch({ type: 'UPDATE_FIELD', payload: { key, value } });
   };
 
-  const toggleTask = (taskId: string) => {
+  const toggleTask = async (taskId: string) => {
+    const project = activeProject;
+    if (!project) return;
+
+    const newChecked = !project.checkedTasks[taskId];
+    
+    // Optimistic update
     dispatch({ type: 'TOGGLE_TASK', payload: taskId });
+
+    try {
+      const slug = project.slug || project.id;
+      await apiClient.toggleTask(slug, taskId, newChecked);
+    } catch (error) {
+      // Revert on error
+      dispatch({ type: 'TOGGLE_TASK', payload: taskId });
+      addToast('Failed to save task. Using local storage.', 'warning');
+    }
   };
 
-  const updateNote = (phaseId: number, content: string) => {
+  const updateNote = async (phaseId: number, content: string) => {
+    const project = activeProject;
+    if (!project) return;
+
+    // Optimistic update
     dispatch({ type: 'UPDATE_NOTE', payload: { phaseId, content } });
+
+    try {
+      const slug = project.slug || project.id;
+      await apiClient.updateNote(slug, phaseId, content);
+    } catch (error) {
+      // Revert on error
+      dispatch({ type: 'UPDATE_NOTE', payload: { phaseId, content: project.notes[phaseId] || '' } });
+      addToast('Failed to save note. Using local storage.', 'warning');
+    }
   };
 
   const setMode = (mode: ProjectMode) => {
     dispatch({ type: 'SET_MODE', payload: mode });
   };
 
-  const createProject = (name: string) => {
-    dispatch({ type: 'CREATE_PROJECT', payload: name });
-    addToast(`Created project "${name}"`, 'success');
+  const createProject = async (name: string) => {
+    const slug = name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+    
+    try {
+      const project = await apiClient.createProject({
+        slug,
+        name,
+        mode: 'new',
+      });
+      // Add to local state
+      const newProj = createDefaultProject(project.id, name);
+      newProj.slug = slug;
+      dispatch({ type: 'CREATE_PROJECT', payload: name });
+      // Replace with actual project data
+      dispatch({ type: 'MERGE_PROJECTS', payload: [newProj] });
+      addToast(`Created project "${name}"`, 'success');
+    } catch (error) {
+      // Fallback to local
+      dispatch({ type: 'CREATE_PROJECT', payload: name });
+      addToast(`Created project "${name}" (local only)`, 'warning');
+    }
   };
 
   const renameProject = (projectId: string, newName: string) => {
