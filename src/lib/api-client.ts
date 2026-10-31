@@ -107,6 +107,13 @@ export class ApiClient {
   async exportProject(slug: string): Promise<any> {
     return this.request<any>(`/api/projects/${slug}/export`);
   }
+
+  async importProject(data: any): Promise<any> {
+    return this.request<any>('/api/projects/import', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
 }
 
 export const apiClient = new ApiClient();
