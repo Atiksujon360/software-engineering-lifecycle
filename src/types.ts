@@ -91,6 +91,7 @@ export interface AuthUser {
 
 export interface ProjectData {
   id: string;
+  slug?: string;
   name: string;
   mode: ProjectMode;
   checkedTasks: Record<string, boolean>;

@@ -373,7 +373,7 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
       try {
         const me = await apiClient.me();
         if (isMounted) {
-          setUser({ id: me.id, email: 'owner@playbook.local' });
+          setUser({ id: String(me.id), email: 'owner@playbook.local' });
           setSyncStatus('saved-cloud');
         }
       } catch {
@@ -628,7 +628,7 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
     try {
       await apiClient.login(password);
       const me = await apiClient.me();
-      setUser({ id: me.id, email: 'owner@playbook.local' });
+      setUser({ id: String(me.id), email: 'owner@playbook.local' });
       addToast('Welcome back!', 'success');
       // Trigger initial cloud sync
       syncManagerRef.current?.sync(storage.projects, true);
