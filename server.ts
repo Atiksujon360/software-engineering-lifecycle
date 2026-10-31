@@ -1,22 +1,21 @@
-import fs from 'node:fs';
-import path from 'node:path';
-import express from 'express';
-import { createServerApp } from './server/index';
-
 const PORT = parseInt(process.env.PORT || '3000', 10);
 const isProd = process.env.NODE_ENV === 'production';
 
 async function bootstrap() {
-  const app = createServerApp();
-
   if (!isProd) {
+    // In development, use Vite dev server directly (configured in vite.config.ts)
     const { createServer } = await import('vite');
-    const vite = await createServer({
-      server: { middlewareMode: true },
-      appType: 'spa',
-    });
-    app.use(vite.middlewares);
+    const vite = await createServer();
+    await vite.listen(PORT);
+    console.log(`Frontend Vite dev server running on port ${PORT}`);
   } else {
+    // In production, serve static files
+    const fs = await import('node:fs');
+    const path = await import('node:path');
+    const express = await import('express');
+    const { createServerApp } = await import('./server/index');
+
+    const app = createServerApp();
     const distPath = path.resolve(process.cwd(), 'dist');
     if (fs.existsSync(distPath)) {
       app.use(express.static(distPath));
@@ -24,11 +23,11 @@ async function bootstrap() {
         res.sendFile(path.join(distPath, 'index.html'));
       });
     }
-  }
 
-  app.listen(PORT, '0.0.0.0', () => {
-    console.log(`Engineering Lifecycle Playbook server running on port ${PORT} [${isProd ? 'production' : 'development'}]`);
-  });
+    app.listen(PORT, '0.0.0.0', () => {
+      console.log(`Engineering Lifecycle Playbook server running on port ${PORT} [production]`);
+    });
+  }
 }
 
 bootstrap().catch((err) => {
