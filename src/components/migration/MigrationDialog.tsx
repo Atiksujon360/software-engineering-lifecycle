@@ -260,38 +260,36 @@ export function MigrationDialog({ user, onClose }: { user: AuthUser | null; onCl
   }
 
   if (stage === 'execute') {
+    let message = '';
+    if (importing) {
+      message = 'Please wait while your data is imported.';
+    } else if (result) {
+      if (result.success) {
+        message = 'Migration complete! Reloading application...';
+      } else {
+        message = 'Migration failed';
+      }
+    }
+
     return (
       <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4">
         <div className="bg-white rounded-lg p-6 max-w-md w-full">
           <h2 className="text-xl font-bold mb-4">Migrating Data...</h2>
-          {importing ? (
-            <p className="text-gray-600">Please wait while your data is imported.</p>
-          ) : result ? (
-            <div>
-              {result.success ? (
-                <div className="text-green-600 mb-4">
-                  ✓ Migration complete! Reloading application...
-                </div>
-              ) : (
-                <div className="text-red-600 mb-4">
-                  ✗ Migration failed
+          <p className="text-gray-600 mb-4">{message}</p>
+          {result && (
+            <div className="space-y-2 mb-4">
+              <div>Imported: {result.importedCount} projects</div>
+              {result.skippedProjects.length > 0 && (
+                <div>Skipped (duplicates): {result.skippedProjects.join(', ')}</div>
+              )}
+              {result.errors.length > 0 && (
+                <div className="text-red-600">
+                  Errors:
+                  <ul className="list-disc list-inside mt-1">
+                    {result.errors.map((e, i) => <li key={i}>{e}</li>)}
+                  </ul>
                 </div>
               )}
-              
-              <div className="space-y-2 mb-4">
-                <div>Imported: {result.importedCount} projects</div>
-                {result.skippedProjects.length > 0 && (
-                  <div>Skipped (duplicates): {result.skippedProjects.join(', ')}</div>
-                )}
-                {result.errors.length > 0 && (
-                  <div className="text-red-600">
-                    Errors:
-                    <ul className="list-disc list-inside mt-1">
-                      {result.errors.map((e, i) => <li key={i}>{e}</li>)}
-                    </ul>
-                  </div>
-                )}
-              </div>
             </div>
           )}
         </div>
