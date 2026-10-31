@@ -54,8 +54,8 @@ export class ApiClient {
     });
   }
 
-  async me(): Promise<{ id: number }> {
-    return this.request<{ id: number }>('/api/auth/me');
+  async me(): Promise<{ id: number; email: string }> {
+    return this.request<{ id: number; email: string }>('/api/auth/me');
   }
 
   async getProjects(): Promise<any[]> {

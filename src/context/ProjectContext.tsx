@@ -730,9 +730,8 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
   // Auth actions
   const login = async (email: string, password: string) => {
     try {
-      const { id, email: ownerEmail } = await apiClient.login(email, password);
-      const me = await apiClient.me();
-      setUser({ id: String(me.id), email: me.email });
+      const { id, email: userEmail } = await apiClient.login(email, password);
+      setUser({ id: String(id), email: userEmail });
       addToast('Welcome back!', 'success');
       // Trigger initial cloud sync
       syncManagerRef.current?.sync(storage.projects, true);
