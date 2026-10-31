@@ -134,19 +134,8 @@ export function MigrationDialog({ user, onClose }: { user: AuthUser | null; onCl
     }
   };
 
-  if (!user) {
-    return (
-      <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-lg p-6 max-w-md w-full">
-          <h2 className="text-xl font-bold mb-4">Authentication Required</h2>
-          <p className="text-gray-600 mb-4">Please log in to migrate your data to the server.</p>
-          <button
-            onClick={onClose}
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-          >
-            Close
-          </button>
-        </div>
+  // Allow migration dialog to open regardless of auth state
+  // Users can browse without login, but need auth to migrate to server
       </div>
     );
   }

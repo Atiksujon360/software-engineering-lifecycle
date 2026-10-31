@@ -144,17 +144,29 @@ export const TopBar: React.FC<TopBarProps> = ({
   const renderSyncIndicator = () => {
     const hasLocalData = typeof localStorage !== 'undefined' && localStorage.getItem('swlp.v2');
 
-    if (!user) {
+    if (!user && hasLocalData) {
       return (
         <button
           type="button"
-          onClick={() => setIsAuthModalOpen(true)}
-          title="Progress is stored locally on this machine. Click to sign in and sync across devices."
-          className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-medium border border-[var(--line)] bg-[var(--surface-raised)] text-[var(--muted)] hover:text-[var(--ink)] cursor-pointer transition-colors"
+          onClick={onOpenMigrationModal}
+          title="Local data available - migrate to server (requires login)"
+          className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-medium border border-(--amber)/30 bg-(--amber-soft) text-(--amber) cursor-pointer"
+        >
+          <Database className="w-3 h-3" />
+          <span>Migrate Local Data</span>
+        </button>
+      );
+    }
+
+    if (!user) {
+      return (
+        <div
+          title="Progress is stored locally on this machine."
+          className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-medium border border-[var(--line)] bg-[var(--surface-raised)] text-[var(--muted)]"
         >
           <span className="w-1.5 h-1.5 rounded-full bg-[var(--muted)]" />
           <span>Saved on this device</span>
-        </button>
+        </div>
       );
     }
 

@@ -367,7 +367,7 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
     };
   }, []);
 
-  // Check auth session on mount
+  // Check auth session on mount (optional - don't block app if offline)
   useEffect(() => {
     let isMounted = true;
     async function checkAuth() {
@@ -434,7 +434,7 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
           }
         }
       } catch {
-        // Server unreachable or offline
+        // Server unreachable or offline - use localStorage only
         if (isMounted) {
           setUser(null);
           setSyncStatus('saved-local');
