@@ -29,6 +29,7 @@ import {
 } from '../utils/storage';
 import { SyncManager } from '../utils/sync';
 import { recordWeeklySnapshot } from '../utils/tracking';
+import { apiClient } from '../lib/api-client';
 
 export interface ToastMessage {
   id: string;
@@ -370,20 +371,10 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
     let isMounted = true;
     async function checkAuth() {
       try {
-        const res = await fetch('/api/auth/me', {
-          credentials: 'include',
-        });
-        if (res.ok) {
-          const data = await res.json();
-          if (isMounted && data.user) {
-            setUser(data.user);
-            setSyncStatus('saved-cloud');
-          }
-        } else {
-          if (isMounted) {
-            setUser(null);
-            setSyncStatus('saved-local');
-          }
+        const me = await apiClient.me();
+        if (isMounted) {
+          setUser({ id: me.id, email: 'owner@playbook.local' });
+          setSyncStatus('saved-cloud');
         }
       } catch {
         // Server unreachable or offline
@@ -589,53 +580,26 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
   // Auth actions
   const login = async (email: string, password: string) => {
     try {
-      const res = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ email, password }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        return { success: false, error: data.detail || 'Sign-in failed.' };
-      }
-      setUser(data.user);
-      addToast(`Welcome back, ${data.user.email}!`, 'success');
+      await apiClient.login(password);
+      const me = await apiClient.me();
+      setUser({ id: me.id, email: 'owner@playbook.local' });
+      addToast('Welcome back!', 'success');
       // Trigger initial cloud sync
       syncManagerRef.current?.sync(storage.projects, true);
       return { success: true };
-    } catch {
-      return { success: false, error: 'Server unreachable. Please try again.' };
+    } catch (error) {
+      return { success: false, error: error instanceof Error ? error.message : 'Sign-in failed.' };
     }
   };
 
   const register = async (email: string, password: string) => {
-    try {
-      const res = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ email, password }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        return { success: false, error: data.detail || 'Registration failed.' };
-      }
-      setUser(data.user);
-      addToast(`Account created! Projects will now sync across devices.`, 'success');
-      syncManagerRef.current?.sync(storage.projects, true);
-      return { success: true };
-    } catch {
-      return { success: false, error: 'Server unreachable. Please try again.' };
-    }
+    // Single-owner backend - registration not supported
+    return { success: false, error: 'Registration not supported. Use the owner account.' };
   };
 
   const logout = async () => {
     try {
-      await fetch('/api/auth/logout', {
-        method: 'POST',
-        credentials: 'include',
-      });
+      await apiClient.logout();
     } catch {}
     setUser(null);
     setSyncStatus('saved-local');
@@ -643,19 +607,8 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   const deleteAccount = async () => {
-    try {
-      const res = await fetch('/api/auth/me', {
-        method: 'DELETE',
-        credentials: 'include',
-      });
-      if (res.ok) {
-        setUser(null);
-        setSyncStatus('saved-local');
-        addToast('Your account and cloud project data have been permanently deleted.', 'info');
-      }
-    } catch {
-      addToast('Failed to delete cloud account.', 'error');
-    }
+    // Single-owner backend - account deletion not supported
+    addToast('Account deletion not supported in single-owner mode.', 'error');
   };
 
   const syncNow = async () => {
